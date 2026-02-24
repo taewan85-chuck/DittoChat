@@ -199,11 +199,8 @@
       <label>나의 MBTI</label>
       <select id="mbti1"></select>
     </div>
-    <div class="field half">
-      <label>상대방 MBTI</label>
-      <select id="mbti2"></select>
-    </div>
   </div>
+  <p style="font-size:0.78rem;color:#aaa;margin-top:-6px;margin-bottom:14px;">상대방은 궁합 목록에서 자동 매칭돼요 ✨</p>
   <button class="btn" onclick="go(2)">다음 →</button>
 </div>
 
@@ -214,15 +211,9 @@
 
   <div class="row">
     <div class="field half">
-      <label>연령대</label>
-      <select id="a_age">
-        <option value="">선택</option>
-        <option>10대</option>
-        <option>20대 초반</option>
-        <option>20대 후반</option>
-        <option>30대</option>
-        <option>40대 이상</option>
-      </select>
+      <label>생년월일</label>
+      <input type="text" id="a_birth" placeholder="YYYY-MM-DD" maxlength="10"
+        oninput="formatBirthInput(this)">
     </div>
     <div class="field half">
       <label>거주지</label>
@@ -408,16 +399,58 @@
 <script>
 /* ── MBTI 셀렉트 초기화 ── */
 const MBTI_LIST = ['ENFP','ENFJ','ENTP','ENTJ','INFP','INFJ','INTP','INTJ','ESFP','ESFJ','ESTP','ESTJ','ISFP','ISFJ','ISTP','ISTJ'];
-['mbti1','mbti2'].forEach((id,i) => {
-  const sel = document.getElementById(id);
-  MBTI_LIST.forEach(m => {
-    const o = document.createElement('option');
-    o.value = o.textContent = m;
-    if (i===0 && m==='ENFP') o.selected = true;
-    if (i===1 && m==='ISTJ') o.selected = true;
-    sel.appendChild(o);
-  });
+const sel1 = document.getElementById('mbti1');
+MBTI_LIST.forEach(m => {
+  const o = document.createElement('option');
+  o.value = o.textContent = m;
+  if (m === 'ENFP') o.selected = true;
+  sel1.appendChild(o);
 });
+
+/* ── 궁합 목록 (랜덤 자동 매칭) ── */
+const COMPATIBILITY = {
+  ENFP: ['INFJ','INTJ','ENFJ'],  ENTP: ['INFP','INTP','ENFP'],
+  ENFJ: ['INFP','ISFP','ENFP'],  ENTJ: ['INTP','INTJ','INFJ'],
+  ESFP: ['ISFJ','ISTJ','ESFJ'],  ESTP: ['ISTP','ISTJ','ESTJ'],
+  ESFJ: ['ISFP','ISFJ','ESFP'],  ESTJ: ['ISTJ','ISTP','ESTP'],
+  INFJ: ['ENFP','ENTP','ENFJ'],  INTJ: ['ENFP','ENTJ','ENTP'],
+  INFP: ['ENFJ','ENTP','ENFP'],  INTP: ['ENTJ','ENTP','ESTJ'],
+  ISFJ: ['ESFP','ESTP','ESFJ'],  ISTJ: ['ESFP','ESTP','ESTJ'],
+  ISFP: ['ENFJ','ESFJ','ESFP'],  ISTP: ['ESTP','ESTJ','ENTJ'],
+};
+function pickMatch(mbti) {
+  const list = COMPATIBILITY[mbti] || MBTI_LIST;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+/* ── 생년월일 → 나이 & 세대 스타일 ── */
+function formatBirthInput(el) {
+  let v = el.value.replace(/\D/g, '');
+  if (v.length > 4)  v = v.slice(0,4) + '-' + v.slice(4);
+  if (v.length > 7)  v = v.slice(0,7) + '-' + v.slice(7);
+  el.value = v.slice(0, 10);
+}
+function calcAgeAndGen(birthStr) {
+  if (!birthStr || birthStr.length < 10) return { ageStr: '', genStyle: '' };
+  const today = new Date();
+  const birth = new Date(birthStr);
+  if (isNaN(birth.getTime())) return { ageStr: '', genStyle: '' };
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  const year = birth.getFullYear();
+  let genStyle = '';
+  if (year >= 2000) {
+    genStyle = '신조어와 줄임말을 자연스럽게 쓰고, 짧은 문장으로 말해. 밈이나 유행어에 반응해.';
+  } else if (year >= 1990) {
+    genStyle = '이모티콘을 적절히 쓰고, 직장 생활이나 사회생활에 공감하는 이야기를 해.';
+  } else if (year >= 1980) {
+    genStyle = '육아나 재테크 같은 소재에 공감하고, 문장형으로 자연스럽게 말해.';
+  } else {
+    genStyle = '격식과 구어체를 적절히 혼용하고, 경험담을 중심으로 이야기해.';
+  }
+  return { ageStr: `${age}살`, genStyle };
+}
 
 /* ── 직업 선택 → 세부정보 토글 ── */
 const DETAIL_LABELS = {
@@ -586,10 +619,11 @@ let currentSrc = null;
 
 function startChat() {
   M1 = document.getElementById('mbti1').value;
-  M2 = document.getElementById('mbti2').value;
+  M2 = pickMatch(M1);  // 궁합 목록에서 랜덤 자동 매칭
 
   // 나의 프로필 수집
-  const a_age    = document.getElementById('a_age').value;
+  const a_birth  = document.getElementById('a_birth').value.trim();
+  const { ageStr: a_age, genStyle: a_genStyle } = calcAgeAndGen(a_birth);
   const a_city   = document.getElementById('a_city').value;
   const a_job    = document.getElementById('a_job').value;
   const a_detail = document.getElementById('a_detail').value.trim();
@@ -618,7 +652,7 @@ function startChat() {
   document.getElementById('label1').textContent = M1;
   document.getElementById('label2').textContent = M2;
   document.getElementById('messages').innerHTML = '';
-  document.getElementById('chatTitle').textContent = '실시간 대화 중...';
+  document.getElementById('chatTitle').textContent = `${M1} × ${M2} 실시간 대화 중...`;
 
   queue.length = 0; busy = false; isDone = false;
   addTypingDots(true);
@@ -633,6 +667,7 @@ function startChat() {
   if (a_convStyle)    p.set('a_convStyle', a_convStyle);
   if (a_emotionStyle) p.set('a_emotionStyle', a_emotionStyle);
   p.set('a_tone', a_tone);
+  if (a_genStyle)     p.set('a_genStyle', a_genStyle);
   if (b_age)     p.set('b_age', b_age);
   if (b_job)     p.set('b_job', b_job);
   if (b_detail)  p.set('b_detail', b_detail);
@@ -678,7 +713,7 @@ setInterval(() => {
   if (isDone && !busy && queue.length === 0) {
     removeTypingDots();
     const t = document.getElementById('chatTitle');
-    if (t && t.textContent === '실시간 대화 중...') t.textContent = '대화 완료 ✅';
+    if (t && t.textContent.includes('실시간 대화 중...')) t.textContent = `${M1} × ${M2} 대화 완료 ✅`;
   }
 }, 300);
 
