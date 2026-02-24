@@ -36,7 +36,7 @@ const QUIZ_CTX = {
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // ── 봇 시스템 프롬프트 생성 ────────────────────────────────────────────────────
-function buildPrompt({ mbti, age, job, detail, city, hobbies, otherMbti, moodCtx }) {
+function buildPrompt({ mbti, age, job, detail, city, hobbies, otherMbti, moodCtx, convStyle, emotionStyle, tone }) {
   let profile = `너는 ${PERSONAS[mbti]} `;
 
   // 인구통계 자연어 조합
@@ -55,6 +55,16 @@ function buildPrompt({ mbti, age, job, detail, city, hobbies, otherMbti, moodCtx
     if (list.length) profile += `취미는 ${list.join(', ')}야. `;
   }
 
+  // ── 성격 스타일 (추가 항목) ──
+  // 대화 스타일: 예) '먼저 말을 거는 편이야' / '듣는 편이야' / '상황에 따라 달라'
+  if (convStyle) profile += `대화 스타일은 ${convStyle}. `;
+
+  // 감정 표현 방식: 예) '감정을 바로 표현하는 편이야' / '감정을 삭히는 편이야'
+  if (emotionStyle) profile += `감정 표현은 ${emotionStyle}. `;
+
+  // 말투 톤: 예) '유쾌함 70%, 진지함 30%'
+  if (tone) profile += `말투 톤은 ${tone}야. 이 비율에 맞게 대화해줘. `;
+
   // 오늘 기분
   if (moodCtx) profile += `오늘 상황: ${moodCtx}. `;
 
@@ -71,6 +81,7 @@ app.get('/api/stream', async (req, res) => {
   const {
     mbti1, mbti2,
     a_age, a_job, a_detail, a_city, a_hobbies,   // 나의 프로필
+    a_convStyle, a_emotionStyle, a_tone,           // 성격 스타일
     b_age, b_job, b_detail,                        // 상대방 프로필
     q1, q2, q3,                                    // 오늘 기분
   } = req.query;
@@ -95,6 +106,7 @@ app.get('/api/stream', async (req, res) => {
   const sysA = buildPrompt({
     mbti: mbti1, age: a_age, job: a_job, detail: a_detail,
     city: a_city, hobbies: a_hobbies, otherMbti: mbti2, moodCtx,
+    convStyle: a_convStyle, emotionStyle: a_emotionStyle, tone: a_tone,
   });
 
   const sysB = buildPrompt({

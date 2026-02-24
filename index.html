@@ -66,6 +66,24 @@
     .tag:hover  { border-color: #b0acff; }
     .tag.on     { border-color: #6c63ff; background: #edeaff; color: #6c63ff; font-weight: 700; }
 
+    /* ── 성격 스타일 (단일 선택 태그) ── */
+    .style-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+    .style-tag {
+      padding: 6px 14px; border: 2px solid #ebebeb; border-radius: 20px;
+      font-size: 0.78rem; cursor: pointer; background: white;
+      transition: all 0.15s; color: #666; user-select: none;
+    }
+    .style-tag:hover { border-color: #b0acff; }
+    .style-tag.on    { border-color: #6c63ff; background: #edeaff; color: #6c63ff; font-weight: 700; }
+
+    /* ── 말투 톤 슬라이더 ── */
+    .tone-wrap { margin-top: 6px; }
+    .tone-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #aaa; margin-bottom: 4px; }
+    .tone-value  { text-align: center; font-size: 0.78rem; color: #6c63ff; font-weight: 700; margin-top: 5px; }
+    input[type=range] {
+      width: 100%; accent-color: #6c63ff; cursor: pointer;
+    }
+
     /* ── 퀴즈 옵션 ── */
     .quiz-section { margin-bottom: 18px; }
     .quiz-title { font-size: 0.85rem; font-weight: 700; color: #555; margin-bottom: 8px; }
@@ -258,6 +276,37 @@
     </div>
   </div>
 
+  <hr class="divider">
+
+  <div class="card-title" style="font-size:0.9rem;margin-bottom:14px;">성격 스타일 ✨</div>
+
+  <div class="field full">
+    <label>대화 스타일</label>
+    <div class="style-tags" id="a_convStyle_tags">
+      <span class="style-tag" data-val="먼저 말을 거는 편이야">💬 먼저 말 거는 편</span>
+      <span class="style-tag" data-val="듣는 편이야">👂 듣는 편</span>
+      <span class="style-tag" data-val="상황에 따라 달라">🔄 상황따라 달라</span>
+    </div>
+  </div>
+
+  <div class="field full">
+    <label>감정 표현 방식</label>
+    <div class="style-tags" id="a_emotionStyle_tags">
+      <span class="style-tag" data-val="감정을 바로 표현하는 편이야">😊 바로 표현하는 편</span>
+      <span class="style-tag" data-val="감정을 삭히는 편이야">😶 삭히는 편</span>
+      <span class="style-tag" data-val="감정 표현이 중간이야">😐 중간</span>
+    </div>
+  </div>
+
+  <div class="field full">
+    <label>말투 톤</label>
+    <div class="tone-wrap">
+      <div class="tone-labels"><span>😄 유쾌함</span><span>🧐 진지함</span></div>
+      <input type="range" id="a_tone_slider" min="0" max="100" value="50" oninput="updateToneLabel(this.value)">
+      <div class="tone-value" id="a_tone_label">유쾌함 50% · 진지함 50%</div>
+    </div>
+  </div>
+
   <button class="btn" onclick="go(3)">다음 →</button>
   <button class="btn-ghost" onclick="go(1)">← 이전</button>
 </div>
@@ -395,10 +444,27 @@ function toggleDetail(prefix) {
   }
 }
 
-/* ── 취미 태그 토글 ── */
+/* ── 취미 태그 토글 (다중 선택) ── */
 document.querySelectorAll('#a_hobbies_tags .tag').forEach(tag => {
   tag.addEventListener('click', () => tag.classList.toggle('on'));
 });
+
+/* ── 성격 스타일 태그 토글 (단일 선택) ── */
+['a_convStyle_tags', 'a_emotionStyle_tags'].forEach(groupId => {
+  document.querySelectorAll(`#${groupId} .style-tag`).forEach(tag => {
+    tag.addEventListener('click', () => {
+      document.querySelectorAll(`#${groupId} .style-tag`).forEach(t => t.classList.remove('on'));
+      tag.classList.add('on');
+    });
+  });
+});
+
+/* ── 말투 톤 슬라이더 ── */
+function updateToneLabel(val) {
+  const fun = parseInt(val);
+  const ser = 100 - fun;
+  document.getElementById('a_tone_label').textContent = `유쾌함 ${fun}% · 진지함 ${ser}%`;
+}
 
 /* ── 퀴즈 선택 ── */
 const answers = { q1: null, q2: null, q3: null };
@@ -535,6 +601,12 @@ function startChat() {
   const b_job    = document.getElementById('b_job').value;
   const b_detail = document.getElementById('b_detail').value.trim();
 
+  // 성격 스타일 수집
+  const a_convStyle    = document.querySelector('#a_convStyle_tags .style-tag.on')?.dataset.val || '';
+  const a_emotionStyle = document.querySelector('#a_emotionStyle_tags .style-tag.on')?.dataset.val || '';
+  const toneVal = document.getElementById('a_tone_slider').value;
+  const a_tone = `유쾌함 ${toneVal}%, 진지함 ${100 - toneVal}%`;
+
   // 발신자 이름 레이블
   M1name = [a_age, a_city, a_job].filter(Boolean).join(' · ') || M1;
   M2name = [b_age, b_job].filter(Boolean).join(' · ') || M2;
@@ -557,7 +629,10 @@ function startChat() {
   if (a_city)    p.set('a_city', a_city);
   if (a_job)     p.set('a_job', a_job);
   if (a_detail)  p.set('a_detail', a_detail);
-  if (a_hobbies) p.set('a_hobbies', a_hobbies);
+  if (a_hobbies)      p.set('a_hobbies', a_hobbies);
+  if (a_convStyle)    p.set('a_convStyle', a_convStyle);
+  if (a_emotionStyle) p.set('a_emotionStyle', a_emotionStyle);
+  p.set('a_tone', a_tone);
   if (b_age)     p.set('b_age', b_age);
   if (b_job)     p.set('b_job', b_job);
   if (b_detail)  p.set('b_detail', b_detail);
