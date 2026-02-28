@@ -80,9 +80,13 @@ function buildPrompt({ mbti, name, nickname, age, job, detail, city, hobbies, ot
   }
 
   // 대화 지시
-  profile += `지금 ${otherMbti} 성격의 친구를 처음 만나 가볍게 대화 중이야. `;
-  profile += `반드시 딱 한 문장으로만 말해. 자연스러운 한국어 구어체로 말해. 이름이나 MBTI는 절대 직접적으로 언급하지 마. `;
-  profile += `대화 가이드: ① 처음엔 나이·사는 곳·하는 일을 자연스럽게 녹여서 자기소개 해. ② 상대방이 무슨 일 하는지 궁금해하며 물어봐. ③ 공통 관심사나 차이가 나오면 그 주제(${topicRule})로 자연스럽게 이어가.`;
+  profile += `지금 ${otherMbti} 성격의 친구를 처음 만나 카카오톡으로 가볍게 대화 중이야. `;
+  profile += `[절대 규칙]
+1. 반드시 카카오톡 대화처럼 아주 짧고 자연스럽게 말해.
+2. 한 번에 딱 1~2문장만 말해. 길게 말하지 마.
+3. 이름이나 MBTI는 절대 직접적으로 언급하지 마.
+4. 상대방을 존중하면서도 친근하게 대화해. `;
+  profile += `대화 가이드: ① 처음엔 나이·사는 곳·하는 일을 아주 짧게 녹여 자기소개 해. ② 상대방에게 눈치껏 짧게 질문을 던져. ③ 화제가 나오면 그 주제(${topicRule})로 짧게 핑퐁해.`;
 
   return profile;
 }
@@ -99,6 +103,7 @@ app.get('/api/stream', async (req, res) => {
   } = req.query;
 
   if (!PERSONAS[mbti1] || !PERSONAS[mbti2]) {
+    console.error(`Invalid MBTI types: mbti1=${mbti1}, mbti2=${mbti2}`);
     return res.status(400).json({ error: '유효하지 않은 MBTI 타입입니다.' });
   }
 
@@ -120,29 +125,29 @@ app.get('/api/stream', async (req, res) => {
     city: null, hobbies: null, otherMbti: mbti1, topic,
   });
 
-  const chatA = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: sysA }).startChat();
-  const chatB = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: sysB }).startChat();
-
-  // 첫 트리거 — Bot A가 먼저 자기소개하도록 유도
-  let lastBMsg = '안녕, 처음이지? 반가워!';
-
   try {
+    const chatA = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: sysA }).startChat();
+    const chatB = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: sysB }).startChat();
+
+    // 첫 트리거 — Bot A가 먼저 자기소개하도록 유도
+    let lastBMsg = '안녕, 반가워! 넌 어디 살아?';
+
     for (let i = 0; i < 5; i++) {
       const resA = await chatA.sendMessage(lastBMsg);
       const textA = resA.response.text().trim();
       send({ mbti: mbti1, text: textA });
-      await sleep(900);
+      await sleep(Math.floor(Math.random() * 1000) + 1000); // 1~2초
 
       const resB = await chatB.sendMessage(textA);
       const textB = resB.response.text().trim();
       lastBMsg = textB;
       send({ mbti: mbti2, text: textB });
-      await sleep(900);
+      await sleep(Math.floor(Math.random() * 1000) + 1000); // 1~2초
     }
     send({ done: true });
   } catch (err) {
-    console.error(err);
-    send({ error: err.message });
+    console.error('Gemini API Chat Loop Error:', err);
+    send({ error: err.message || '대화 생성 중 오류가 발생했습니다.' });
   }
 
   res.end();

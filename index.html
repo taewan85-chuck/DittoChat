@@ -555,6 +555,7 @@
   <h1>디토챗 💬</h1>
   <p class="subtitle">나의 디토와 상대방의 디토가 처음 만나면?</p>
 
+
   <!-- 스텝 인디케이터 -->
   <div class="stepper" id="stepper">
     <div class="s-dot active" id="sd1">1</div>
@@ -564,149 +565,71 @@
     <div class="s-dot" id="sd3">3</div>
     <div class="s-line" id="sl3"></div>
     <div class="s-dot" id="sd4">4</div>
-    <span class="s-label active" id="stepLabel">MBTI 선택</span>
+    <div class="s-line" id="sl4"></div>
+    <div class="s-dot" id="sd5">5</div>
+    <span class="s-label active" id="stepLabel">생년월일</span>
   </div>
 
-  <!-- ─── Step 1: MBTI 선택 ─── -->
+  <!-- ─── Step 1: 생년월일 ─── -->
   <div class="card" id="step1">
-    <div class="card-title">MBTI 조합 선택 👀</div>
-    <div class="card-sub">어떤 두 성격이 대화할지 정해봐</div>
+    <div class="card-title">기본 정보 🎂</div>
+    <div class="card-sub">생년월일 6자리를 입력해주세요</div>
     <div class="row">
-      <div class="field half">
-        <label>나의 MBTI</label>
-        <select id="mbti1"></select>
+      <div class="field full">
+        <label>생년월일 (예: 851120)</label>
+        <input type="text" id="a_birth" placeholder="YYMMDD" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, ''); document.getElementById('btn-s1').disabled = this.value.length < 6;">
       </div>
     </div>
-    <p style="font-size:0.78rem;color:#aaa;margin-top:-6px;margin-bottom:14px;">상대방은 궁합 목록에서 자동 매칭돼요 ✨</p>
-    <button class="btn" onclick="go(2)">다음 →</button>
+    <button class="btn" onclick="go(2)" id="btn-s1" disabled>다음 →</button>
   </div>
 
-  <!-- ─── Step 2: 나의 프로필 ─── -->
+  <!-- ─── Step 2: 거주지 ─── -->
   <div class="card hidden" id="step2">
-    <div class="card-title">나의 프로필 🙋</div>
-    <div class="card-sub">더 나다운 디토를 만들어줄 거야</div>
-
+    <div class="card-title">사는 곳 🏠</div>
+    <div class="card-sub">현재 거주 중인 지역을 선택해주세요</div>
     <div class="row">
-      <div class="field half">
-        <label>아바타 이름</label>
-        <input type="text" id="a_name" placeholder="예: 디토" maxlength="15">
-      </div>
-      <div class="field half">
-        <label>나만의 별명</label>
-        <input type="text" id="a_nickname" placeholder="친구들이 부르는 별명/닉네임" maxlength="20">
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="field half">
-        <label>생년월일</label>
-        <input type="text" id="a_birth" placeholder="YYYY-MM-DD" maxlength="10" oninput="formatBirthInput(this)">
-      </div>
-      <div class="field half">
+      <div class="field full">
         <label>거주지</label>
-        <select id="a_city">
+        <select id="a_city" onchange="document.getElementById('btn-s2').disabled = !this.value">
           <option value="">선택</option>
           <option>서울</option>
           <option>경기/인천</option>
-          <option>부산</option>
+          <option>강원</option>
+          <option>대전/충청</option>
           <option>대구/경북</option>
+          <option>부산/경남</option>
           <option>광주/전라</option>
-          <option>기타 지방</option>
+          <option>제주</option>
+          <option>기타 지방 혹은 해외</option>
         </select>
       </div>
     </div>
-
-    <div class="field full">
-      <label>직업/상황</label>
-      <select id="a_job" onchange="toggleDetail('a')">
-        <option value="">선택</option>
-        <option value="고등학생">고등학생</option>
-        <option value="대학생">대학생</option>
-        <option value="취준생">취준생 (구직 중)</option>
-        <option value="직장인">직장인</option>
-        <option value="프리랜서">프리랜서</option>
-        <option value="자영업자">자영업자</option>
-        <option value="기타">기타</option>
-      </select>
-    </div>
-
-    <!-- 조건부: 대학생/직장인/기타일 때 세부 정보 -->
-    <div class="field full hidden" id="a_detail_wrap">
-      <label id="a_detail_label">세부 정보</label>
-      <input type="text" id="a_detail" placeholder="예: 경영학과 2학년" maxlength="40">
-    </div>
-
-    <hr class="divider">
-
-    <div class="field full">
-      <label>취미 (여러 개 선택 가능)</label>
-      <div class="tags" id="a_hobbies_tags">
-        <span class="tag" data-val="운동/헬스">🏃 운동/헬스</span>
-        <span class="tag" data-val="게임">🎮 게임</span>
-        <span class="tag" data-val="유튜브/넷플릭스">📺 유튜브/넷플</span>
-        <span class="tag" data-val="독서">📚 독서</span>
-        <span class="tag" data-val="음악감상">🎵 음악감상</span>
-        <span class="tag" data-val="요리/맛집">🍳 요리/맛집</span>
-        <span class="tag" data-val="여행">✈️ 여행</span>
-        <span class="tag" data-val="카페">☕ 카페</span>
-        <span class="tag" data-val="쇼핑">🛍️ 쇼핑</span>
-        <span class="tag" data-val="그림/창작">🎨 그림/창작</span>
-      </div>
-    </div>
-
-    <hr class="divider">
-
-    <div class="card-title" style="font-size:0.9rem;margin-bottom:14px;">성격 스타일 ✨</div>
-
-    <div class="field full">
-      <label>대화 스타일</label>
-      <div class="style-tags" id="a_convStyle_tags">
-        <span class="style-tag" data-val="먼저 말을 거는 편이야">💬 먼저 말 거는 편</span>
-        <span class="style-tag" data-val="듣는 편이야">👂 듣는 편</span>
-        <span class="style-tag" data-val="상황에 따라 달라">🔄 상황따라 달라</span>
-      </div>
-    </div>
-
-    <div class="field full">
-      <label>감정 표현 방식</label>
-      <div class="style-tags" id="a_emotionStyle_tags">
-        <span class="style-tag" data-val="감정을 바로 표현하는 편이야">😊 바로 표현하는 편</span>
-        <span class="style-tag" data-val="감정을 삭히는 편이야">😶 삭히는 편</span>
-        <span class="style-tag" data-val="감정 표현이 중간이야">😐 중간</span>
-      </div>
-    </div>
-
-    <div class="field full">
-      <label>말투 톤</label>
-      <div class="tone-wrap">
-        <div class="tone-labels"><span>😄 유쾌함</span><span>🧐 진지함</span></div>
-        <input type="range" id="a_tone_slider" min="0" max="100" value="50" oninput="updateToneLabel(this.value)">
-        <div class="tone-value" id="a_tone_label">유쾌함 50% · 진지함 50%</div>
-      </div>
-    </div>
-
-    <button class="btn" onclick="go(3)">다음 →</button>
+    <button class="btn" onclick="go(3)" id="btn-s2" disabled>다음 →</button>
     <button class="btn-ghost" onclick="go(1)">← 이전</button>
   </div>
 
-  <!-- ─── Step 3: 상대방 프로필 ─── -->
+  <!-- ─── Step 3: 직업/상황 ─── -->
   <div class="card hidden" id="step3">
-    <div class="card-title">오늘의 대화 상대 🤝</div>
-    <div class="card-sub">나와 잘 맞는 상대를 자동으로 찾았어요!</div>
-
-    <div class="field full" style="text-align: center; margin: 30px 0;">
-      <div style="font-size: 3rem; margin-bottom: 10px;" id="b_mbti_display">???</div>
-      <div style="font-size: 1.1rem; font-weight: bold; color: #6c63ff;" id="b_desc_display">나이/취미 매칭 중...</div>
+    <div class="card-title">나의 상황 💼</div>
+    <div class="card-sub">현재 어떤 일을 하고 계신가요?</div>
+    <div class="field full">
+      <label>직업/상황</label>
+      <select id="a_job" onchange="document.getElementById('btn-s3').disabled = !this.value">
+        <option value="">선택</option>
+        <option value="학생">학생 (초/중/고)</option>
+        <option value="대학생">대학생</option>
+        <option value="직장인">직장인</option>
+        <option value="기타">기타 (프리랜서, 주부, 취준생 등)</option>
+      </select>
     </div>
-
-    <button class="btn" onclick="go(4)">다음 →</button>
+    <button class="btn" onclick="go(4)" id="btn-s3" disabled>다음 →</button>
     <button class="btn-ghost" onclick="go(2)">← 이전</button>
   </div>
 
   <!-- ─── Step 4: 대화 주제 선택 ─── -->
   <div class="card hidden" id="step4">
     <div class="card-title">어떤 대화를 나눠볼까? 💬</div>
-    <div class="card-sub">관심 있는 대화 주제를 하나만 선택해주세요</div>
+    <div class="card-sub">관심 있는 대화 주제를 선택해주세요</div>
 
     <div class="quiz-section">
       <div class="opts" id="topic_opts">
@@ -715,33 +638,55 @@
         <button class="opt-btn" data-topic="업무"><span class="opt-emoji">💼</span>업무</button>
         <button class="opt-btn" data-topic="결혼"><span class="opt-emoji">💍</span>결혼</button>
         <button class="opt-btn" data-topic="육아"><span class="opt-emoji">👶</span>육아</button>
-        <button class="opt-btn" data-topic="기타"><span class="opt-emoji">✨</span>기타 (일상)</button>
+        <button class="opt-btn" data-topic="취업"><span class="opt-emoji">🎯</span>취업</button>
+        <button class="opt-btn" data-topic="기타" id="btn-topic-other"><span class="opt-emoji">✏️</span>기타 (직접 입력)</button>
       </div>
-      <hr class="divider">
-
-      <div class="quiz-section" style="margin-top: 20px;">
-        <div class="card-title" style="font-size: 0.95rem;">카카오톡 대화 분석기 (선택) 📱</div>
-        <div class="card-sub" style="margin-bottom: 8px;">나의 실제 말투를 분석해서 자동 적용해드려요!</div>
-        <textarea id="kakao_text"
-          style="width: 100%; height: 100px; padding: 10px; border: 2px solid #ebebeb; border-radius: 10px; font-size: 0.85rem; resize: none; margin-bottom: 8px;"
-          placeholder="여기에 카카오톡 대화를 복사해서 붙여넣으세요 (최소 50자 이상)"></textarea>
-        <div style="display: flex; gap: 10px;">
-          <button class="btn" style="flex: 1; background: #6c63ff; padding: 10px; font-size: 0.9rem;" id="btn-analyze"
-            disabled>대화 분석하기 🔍</button>
-          <button class="btn"
-            style="flex: 1; background: #fff; color: #6c63ff; border: 2px solid #6c63ff; padding: 10px; font-size: 0.9rem;"
-            id="btn-upload" onclick="document.getElementById('file-upload').click()">txt 파일 업로드 📁</button>
-          <input type="file" id="file-upload" accept=".txt" style="display: none;" onchange="handleFileUpload(event)">
-        </div>
-        <div id="analyze_result"
-          style="margin-top: 10px; font-size: 0.8rem; color: #6c63ff; font-weight: bold; text-align: center;"></div>
+      <div id="topic-other-wrap" class="hidden" style="margin-top:10px;">
+        <input type="text" id="topic-other-input" placeholder="어떤 주제로 대화할까요?" maxlength="20" style="width:100%; padding:10px; border-radius:10px; border:2px solid #ebebeb;" oninput="document.getElementById('btn-s4').disabled = this.value.trim() === ''; if(this.value.trim() !== '') selectedTopic = this.value.trim();">
       </div>
-
-      <button class="btn" id="btn-start" disabled onclick="startChat()" style="margin-top: 15px;">이 설정으로 대화 시작하기
-        ✨</button>
-      <button class="btn-ghost" onclick="go(3)">← 이전</button>
     </div>
 
+    <button class="btn" onclick="go(5)" id="btn-s4" disabled>다음 →</button>
+    <button class="btn-ghost" onclick="go(3)">← 이전</button>
+  </div>
+
+  <!-- ─── Step 5: 대화 상대 찾기 ─── -->
+  <div class="card hidden" id="step5">
+    <div class="card-title">대화 상대 찾기 🕵️‍♀️</div>
+    <div class="card-sub">누구와 대화하고 싶으신가요?</div>
+    
+    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;" id="match-buttons">
+      <button class="btn" style="flex: 1;" onclick="findMatch('남자', 'b')">👨 남자 찾기</button>
+      <button class="btn" style="flex: 1;" onclick="findMatch('여자', 'b')">👩 여자 찾기</button>
+    </div>
+
+    <div id="match-loading" class="hidden" style="text-align: center; margin: 30px 0;">
+      <div style="font-size: 1.2rem; font-weight: bold; color: #6c63ff;" id="match-loading-text">상대를 찾고 있습니다...</div>
+      <div style="font-size: 0.85rem; color: #999; margin-top: 10px;">나이 ±10세, MBTI 궁합 기반</div>
+    </div>
+
+    <div id="match-result" class="hidden" style="text-align: center; margin: 30px 0;">
+      <div style="font-size: 1.5rem; margin-bottom: 10px;" id="match-name"></div>
+      <div style="font-size: 1rem; font-weight: bold; color: #6c63ff;" id="match-desc"></div>
+    </div>
+
+    <!-- 카카오톡 분석기 섹션 이동 (선택) -->
+    <hr class="divider">
+    <div class="quiz-section" style="margin-top: 20px;">
+      <div class="card-title" style="font-size: 0.95rem;">카카오톡 대화 분석기 (선택) 📱</div>
+      <div class="card-sub" style="margin-bottom: 8px;">나의 실제 말투를 분석해서 자동 적용해드려요!</div>
+      <textarea id="kakao_text" style="width: 100%; height: 100px; padding: 10px; border: 2px solid #ebebeb; border-radius: 10px; font-size: 0.85rem; resize: none; margin-bottom: 8px;" placeholder="여기에 카카오톡 대화를 복사해서 붙여넣으세요 (최소 50자 이상)"></textarea>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn" style="flex: 1; background: #6c63ff; padding: 10px; font-size: 0.9rem;" id="btn-analyze" disabled>대화 분석하기 🔍</button>
+        <button class="btn" style="flex: 1; background: #fff; color: #6c63ff; border: 2px solid #6c63ff; padding: 10px; font-size: 0.9rem;" id="btn-upload" onclick="document.getElementById('file-upload').click()">txt 파일 업로드 📁</button>
+        <input type="file" id="file-upload" accept=".txt" style="display: none;" onchange="handleFileUpload(event)">
+      </div>
+      <div id="analyze_result" style="margin-top: 10px; font-size: 0.8rem; color: #6c63ff; font-weight: bold; text-align: center;"></div>
+    </div>
+
+    <button class="btn hidden" id="btn-start" onclick="startChat()" style="margin-top: 15px;">이 상대와 대화 시작하기 ✨</button>
+    <button class="btn-ghost" onclick="go(4)" id="btn-prev-5">← 이전</button>
+  </div>
     <!-- ─── 채팅 ─── -->
     <div class="chat-wrap hidden" id="chatWrap">
       <div class="chat-box">
@@ -758,17 +703,9 @@
     </div>
 
     <script>
-      /* ── MBTI 셀렉트 초기화 ── */
-      const MBTI_LIST = ['ENFP', 'ENFJ', 'ENTP', 'ENTJ', 'INFP', 'INFJ', 'INTP', 'INTJ', 'ESFP', 'ESFJ', 'ESTP', 'ESTJ', 'ISFP', 'ISFJ', 'ISTP', 'ISTJ'];
-      const sel1 = document.getElementById('mbti1');
-      MBTI_LIST.forEach(m => {
-        const o = document.createElement('option');
-        o.value = o.textContent = m;
-        if (m === 'ENFP') o.selected = true;
-        sel1.appendChild(o);
-      });
 
-      /* ── 궁합 목록 (랜덤 자동 매칭) ── */
+      const MBTI_LIST = ['ENFP', 'ENFJ', 'ENTP', 'ENTJ', 'INFP', 'INFJ', 'INTP', 'INTJ', 'ESFP', 'ESFJ', 'ESTP', 'ESTJ', 'ISFP', 'ISFJ', 'ISTP', 'ISTJ'];
+      
       const COMPATIBILITY = {
         ENFP: ['INFJ', 'INTJ', 'ENFJ'], ENTP: ['INFP', 'INTP', 'ENFP'],
         ENFJ: ['INFP', 'ISFP', 'ENFP'], ENTJ: ['INTP', 'INTJ', 'INFJ'],
@@ -779,107 +716,49 @@
         ISFJ: ['ESFP', 'ESTP', 'ESFJ'], ISTJ: ['ESFP', 'ESTP', 'ESTJ'],
         ISFP: ['ENFJ', 'ESFJ', 'ESFP'], ISTP: ['ESTP', 'ESTJ', 'ENTJ'],
       };
+
       function pickMatch(mbti) {
         const list = COMPATIBILITY[mbti] || MBTI_LIST;
         return list[Math.floor(Math.random() * list.length)];
       }
 
-      /* ── 생년월일 → 나이 & 세대 스타일 ── */
-      function formatBirthInput(el) {
-        let v = el.value.replace(/\D/g, '');
-        if (v.length > 4) v = v.slice(0, 4) + '-' + v.slice(4);
-        if (v.length > 7) v = v.slice(0, 7) + '-' + v.slice(7);
-        el.value = v.slice(0, 10);
-      }
       function calcAgeAndGen(birthStr) {
-        if (!birthStr || birthStr.length < 10) return { ageStr: '', genStyle: '' };
+        if (!birthStr || birthStr.length < 6) return { ageStr: '', genStyle: '' };
+        let yy = parseInt(birthStr.substring(0, 2), 10);
+        const year = yy <= 24 ? 2000 + yy : 1900 + yy;
+        const month = parseInt(birthStr.substring(2, 4), 10) - 1;
+        const day = parseInt(birthStr.substring(4, 6), 10);
+        
         const today = new Date();
-        const birth = new Date(birthStr);
-        if (isNaN(birth.getTime())) return { ageStr: '', genStyle: '' };
+        const birth = new Date(year, month, day);
         let age = today.getFullYear() - birth.getFullYear();
         const m = today.getMonth() - birth.getMonth();
         if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-        const year = birth.getFullYear();
+
         let genStyle = '';
-        if (year >= 2000) {
-          genStyle = '신조어와 줄임말을 자연스럽게 쓰고, 짧은 문장으로 말해. 밈이나 유행어에 반응해.';
-        } else if (year >= 1990) {
-          genStyle = '이모티콘을 적절히 쓰고, 직장 생활이나 사회생활에 공감하는 이야기를 해.';
-        } else if (year >= 1980) {
-          genStyle = '육아나 재테크 같은 소재에 공감하고, 문장형으로 자연스럽게 말해.';
-        } else {
-          genStyle = '격식과 구어체를 적절히 혼용하고, 경험담을 중심으로 이야기해.';
-        }
+        if (year >= 2000) genStyle = '신조어와 줄임말을 자연스럽게 쓰고, 짧은 문장으로 말해. 밈이나 유행어에 반응해.';
+        else if (year >= 1990) genStyle = '이모티콘을 적절히 쓰고, 직장 생활이나 사회생활에 공감하는 이야기를 해.';
+        else if (year >= 1980) genStyle = '육아나 재테크 같은 소재에 공감하고, 문장형으로 자연스럽게 말해.';
+        else genStyle = '격식과 구어체를 적절히 혼용하고, 경험담을 중심으로 이야기해.';
+        
         return { ageStr: `${age}살`, genStyle };
       }
 
-      /* ── 직업 선택 → 세부정보 토글 ── */
-      const DETAIL_LABELS = {
-        '대학생': '전공 & 학년  (예: 경영학과 2학년)',
-        '직장인': '직종 & 회사 규모  (예: IT스타트업 개발자)',
-        '고등학생': '학교 특징  (예: 예술고 2학년)',
-        '취준생': '준비 분야  (예: 공무원 시험 준비 중)',
-        '프리랜서': '주요 업무  (예: 영상편집 프리랜서)',
-        '자영업자': '업종  (예: 카페 운영)',
-        '기타': '하는 일  (자유 입력)',
-      };
-      function toggleDetail(prefix) {
-        const job = document.getElementById(`${prefix}_job`).value;
-        const wrap = document.getElementById(`${prefix}_detail_wrap`);
-        const label = document.getElementById(`${prefix}_detail_label`);
-        const show = !!job && job !== '';
-        wrap.classList.toggle('hidden', !show);
-        if (show) {
-          label.textContent = DETAIL_LABELS[job] || '세부 정보';
-          document.getElementById(`${prefix}_detail`).placeholder =
-            job === '대학생' ? '예: 경영학과 2학년' :
-              job === '직장인' ? '예: IT스타트업 개발자' :
-                job === '취준생' ? '예: 공무원 시험 준비 중' : '자유 입력';
-        }
-      }
-
-      /* ── 취미 태그 토글 (다중 선택) ── */
-      document.querySelectorAll('#a_hobbies_tags .tag').forEach(tag => {
-        tag.addEventListener('click', () => tag.classList.toggle('on'));
-      });
-
-      /* ── 성격 스타일 태그 토글 (단일 선택) ── */
-      ['a_convStyle_tags', 'a_emotionStyle_tags'].forEach(groupId => {
-        document.querySelectorAll(`#${groupId} .style-tag`).forEach(tag => {
-          tag.addEventListener('click', () => {
-            document.querySelectorAll(`#${groupId} .style-tag`).forEach(t => t.classList.remove('on'));
-            tag.classList.add('on');
-          });
-        });
-      });
-
-      /* ── 말투 톤 슬라이더 ── */
-      function updateToneLabel(val) {
-        const fun = parseInt(val);
-        const ser = 100 - fun;
-        document.getElementById('a_tone_label').textContent = `유쾌함 ${fun}% · 진지함 ${ser}%`;
-      }
-
-      /* ── 카카오톡 대화 분석기 ── */
       let analyzedStyle = "";
-
       const kakaoInput = document.getElementById('kakao_text');
       const btnAnalyze = document.getElementById('btn-analyze');
-      const btnStart = document.getElementById('btn-start');
       const analyzeResult = document.getElementById('analyze_result');
 
-      kakaoInput.addEventListener('input', () => {
+      if(kakaoInput) kakaoInput.addEventListener('input', () => {
         btnAnalyze.disabled = kakaoInput.value.trim().length < 50;
       });
 
-      btnAnalyze.addEventListener('click', () => {
+      if(btnAnalyze) btnAnalyze.addEventListener('click', () => {
         analyzeResult.textContent = '분석 중...';
         btnAnalyze.disabled = true;
         setTimeout(() => {
-          // Mock analysis
-          analyzedStyle = kakaoInput.value.substring(0, 100); // 100자까지만 컨텍스트로 사용
+          analyzedStyle = kakaoInput.value.substring(0, 100);
           analyzeResult.textContent = '✅ 분석 완료! 설정에 반영되었습니다.';
-          btnStart.disabled = false;
         }, 1000);
       });
 
@@ -896,39 +775,25 @@
         }
       }
 
-      /* ── 주제 선택 ── */
       let selectedTopic = null;
       document.querySelectorAll('#topic_opts .opt-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('#topic_opts .opt-btn').forEach(b => b.classList.remove('selected'));
           btn.classList.add('selected');
           selectedTopic = btn.dataset.topic;
-          document.getElementById('btn-start').disabled = false;
+          document.getElementById('btn-s4').disabled = false;
         });
       });
 
-      /* ── 스텝 이동 ── */
-      const STEP_LABELS = ['', 'MBTI 선택', '나의 프로필', '상대방 프로필', '대화 주제 선택'];
+      const STEP_LABELS = ['', '생년월일', '거주지', '직업', '대화 주제', '대화 상대'];
       function go(n) {
-        for (let i = 1; i <= 4; i++) {
+        for (let i = 1; i <= 5; i++) {
           document.getElementById(`step${i}`)?.classList.toggle('hidden', i !== n);
         }
-
-        // 상대방 매칭 뷰(Step 3) 진입 시 임시 매칭 효과
-        if (n === 3) {
-          document.getElementById('b_mbti_display').textContent = '???';
-          document.getElementById('b_desc_display').textContent = '상대방 매칭 중...';
-          setTimeout(() => {
-            const matchMbti = pickMatch(document.getElementById('mbti1').value);
-            document.getElementById('b_mbti_display').textContent = matchMbti;
-            document.getElementById('b_desc_display').textContent = '나와 잘 맞는 파트너를 찾았습니다! ✨';
-          }, 800);
-        }
-
         document.getElementById('chatWrap').classList.add('hidden');
         document.getElementById('stepper').classList.remove('hidden');
 
-        for (let i = 1; i <= 4; i++) {
+        for (let i = 1; i <= 5; i++) {
           const dot = document.getElementById(`sd${i}`);
           const line = document.getElementById(`sl${i}`);
           dot?.classList.toggle('active', i === n);
@@ -937,14 +802,11 @@
         }
         const lbl = document.getElementById('stepLabel');
         lbl.textContent = STEP_LABELS[n];
-        lbl.className = 's-label active';
       }
 
-      /* ── 유틸 ── */
       const sleep = ms => new Promise(r => setTimeout(r, ms));
       const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-      /* ── 타이핑 애니메이션 ── */
       async function typeText(el, text) {
         el.textContent = '';
         el.classList.add('cursor');
@@ -956,11 +818,38 @@
         el.classList.remove('cursor');
       }
 
-      /* ── 메시지 큐 ── */
       const queue = [];
       let busy = false, isDone = false;
       let M1 = '', M2 = '';
-      let M1name = '', M2name = '';
+      let M1name = '나', M2name = '상대방';
+      let matchBAge = '';
+
+      function findMatch(gender, prefix) {
+        M1 = MBTI_LIST[Math.floor(Math.random() * MBTI_LIST.length)];
+        M2 = pickMatch(M1);
+
+        document.getElementById('match-buttons').classList.add('hidden');
+        document.getElementById('match-loading').classList.remove('hidden');
+        
+        setTimeout(() => {
+          document.getElementById('match-loading').classList.add('hidden');
+          document.getElementById('match-result').classList.remove('hidden');
+          
+          document.getElementById('match-name').textContent = `${gender} 님이 선택되었습니다`;
+          
+          const a_birth = document.getElementById('a_birth').value.trim();
+          const { ageStr } = calcAgeAndGen(a_birth);
+          if (ageStr) {
+            const myAgeNum = parseInt(ageStr.match(/d+/)[0]);
+            const diff = Math.floor(Math.random() * 21) - 10;
+            matchBAge = `${myAgeNum + diff}살`;
+          }
+          document.getElementById('match-desc').textContent = `나이 ${matchBAge || '?'} · 자동 MBTI 매칭 완료`;
+          
+          document.getElementById('btn-start').classList.remove('hidden');
+          document.getElementById('btn-prev-5').classList.add('hidden');
+        }, 1500);
+      }
 
       async function processQueue() {
         if (busy || queue.length === 0) return;
@@ -975,7 +864,7 @@
 
         const av = document.createElement('div');
         av.className = `avatar ${isA ? 'avatar-a' : 'avatar-b'}`;
-        av.textContent = mbti;
+        av.textContent = '#'+mbti.substring(0,2); 
 
         const group = document.createElement('div');
         group.className = 'msg-group';
@@ -1012,8 +901,7 @@
         const row = document.createElement('div');
         row.id = 'typing-dots';
         row.className = `msg ${isA ? '' : 'right'}`;
-        row.innerHTML = `
-    <div class="avatar ${isA ? 'avatar-a' : 'avatar-b'}">${esc(isA ? M1 : M2)}</div>
+        row.innerHTML = `<div class="avatar ${isA ? 'avatar-a' : 'avatar-b'}">${esc(isA ? '#'+M1.substring(0,2) : '#'+M2.substring(0,2))}</div>
     <div class="dots-wrap ${isA ? 'side-a' : 'side-b'}">
       <div class="d"></div><div class="d"></div><div class="d"></div>
     </div>`;
@@ -1022,62 +910,15 @@
       }
       function removeTypingDots() { document.getElementById('typing-dots')?.remove(); }
 
-      /* ── 채팅 시작 ── */
       let currentSrc = null;
 
       function startChat() {
-        M1 = document.getElementById('mbti1').value;
-        M2 = pickMatch(M1);  // 궁합 목록에서 랜덤 자동 매칭
-
-        // 나의 프로필 수집
-        const a_name = document.getElementById('a_name').value.trim() || M1;
-        const a_nickname = document.getElementById('a_nickname').value.trim();
         const a_birth = document.getElementById('a_birth').value.trim();
         const { ageStr: a_age, genStyle: a_genStyle } = calcAgeAndGen(a_birth);
         const a_city = document.getElementById('a_city').value;
         const a_job = document.getElementById('a_job').value;
-        const a_detail = document.getElementById('a_detail').value.trim();
-        const a_hobbies = [...document.querySelectorAll('#a_hobbies_tags .tag.on')]
-          .map(t => t.dataset.val).join(',');
 
-        // 상대방 프로필 자동 생성 (나이 ±5세, 취미 1개 이상 일치)
-        let b_ageStr = "";
-        if (a_age) {
-          const myAgeMatch = a_age.match(/\d+/);
-          if (myAgeMatch) {
-            const myAgeNum = parseInt(myAgeMatch[0]);
-            const diff = Math.floor(Math.random() * 11) - 5; // -5 ~ +5
-            b_ageStr = `${myAgeNum + diff}살`;
-          }
-        }
-
-        // 취미 공유
-        let b_hobbies = "";
-        const hobbyArr = [...document.querySelectorAll('#a_hobbies_tags .tag.on')].map(t => t.dataset.val);
-        if (hobbyArr.length > 0) {
-          // 내 취미 중 1개를 무작위로 상대방 취미로 설정
-          b_hobbies = hobbyArr[Math.floor(Math.random() * hobbyArr.length)];
-        }
-
-        const b_job = ""; // 직업은 서버 프롬프트에서 자연스럽게 맡기거나 생략
-        const b_detail = "";
-
-        // 성격 스타일 수집
-        const a_convStyle = document.querySelector('#a_convStyle_tags .style-tag.on')?.dataset.val || '';
-        const a_emotionStyle = document.querySelector('#a_emotionStyle_tags .style-tag.on')?.dataset.val || '';
-        const toneVal = document.getElementById('a_tone_slider').value;
-        const a_tone = `유쾌함 ${toneVal}%, 진지함 ${100 - toneVal}%`;
-
-        // 발신자 이름 레이블 (이름 또는 별명 우선)
-        M1name = a_nickname || a_name;
-        // Set M2 if it was selected in match step
-        M2 = document.getElementById('b_mbti_display').textContent;
-        if (M2 === '???') M2 = pickMatch(M1);
-
-        M2name = [b_ageStr, M2].filter(Boolean).join(' · ') || M2;
-
-        // UI 전환
-        document.getElementById('step4').classList.add('hidden');
+        document.getElementById('step5').classList.add('hidden');
         document.getElementById('stepper').classList.add('hidden');
         document.getElementById('chatWrap').classList.remove('hidden');
         document.getElementById('label1').textContent = M1;
@@ -1088,21 +929,12 @@
         queue.length = 0; busy = false; isDone = false;
         addTypingDots(true);
 
-        // SSE 파라미터 구성
         const p = new URLSearchParams({ mbti1: M1, mbti2: M2 });
-        if (a_name) p.set('a_name', a_name);
-        if (a_nickname) p.set('a_nickname', a_nickname);
         if (a_age) p.set('a_age', a_age);
-        if (a_city) p.set('a_city', a_city);
-        if (a_job) p.set('a_job', a_job);
-        if (a_detail) p.set('a_detail', a_detail);
-        if (a_hobbies) p.set('a_hobbies', a_hobbies);
-        if (a_convStyle) p.set('a_convStyle', a_convStyle);
-        if (a_emotionStyle) p.set('a_emotionStyle', a_emotionStyle);
-        p.set('a_tone', a_tone);
+        if (a_city && a_city !== '선택') p.set('a_city', a_city);
+        if (a_job && a_job !== '선택') p.set('a_job', a_job);
         if (a_genStyle) p.set('a_genStyle', a_genStyle);
-        if (b_ageStr) p.set('b_age', b_ageStr);
-        if (b_hobbies) p.set('b_hobbies', b_hobbies);
+        if (matchBAge) p.set('b_age', matchBAge);
         if (selectedTopic) p.set('topic', selectedTopic);
         if (analyzedStyle) p.set('kakao_style', analyzedStyle);
 
@@ -1112,7 +944,6 @@
 
         src.onmessage = (e) => {
           const data = JSON.parse(e.data);
-
           if (data.done) {
             isDone = true;
             if (!busy && queue.length === 0) {
@@ -1139,7 +970,6 @@
         src.onerror = () => { removeTypingDots(); src.close(); };
       }
 
-      /* ── 완료 후 title 업데이트 ── */
       setInterval(() => {
         if (isDone && !busy && queue.length === 0) {
           removeTypingDots();
@@ -1148,11 +978,16 @@
         }
       }, 300);
 
-      /* ── 다시 설정 ── */
       function restart() {
         if (currentSrc) currentSrc.close();
+        // Reset match buttons and text
+        document.getElementById('match-buttons').classList.remove('hidden');
+        document.getElementById('match-result').classList.add('hidden');
+        document.getElementById('btn-start').classList.add('hidden');
+        document.getElementById('btn-prev-5').classList.remove('hidden');
         go(1);
       }
+
     </script>
 </body>
 
