@@ -5,6 +5,13 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const app = express();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 app.use(express.static('.'));
+app.use(express.json());
+
+// 피드백 데이터 저장소 (세션/DB 대신 메모리)
+const stylePreferences = {
+  likes: [],
+  dislikes: []
+};
 
 // ── MBTI 성격 정의 ─────────────────────────────────────────────────────────────
 const PERSONAS = {
@@ -83,13 +90,40 @@ function buildPrompt({ mbti, name, nickname, age, job, detail, city, hobbies, ot
   profile += `지금 ${otherMbti} 성격의 친구를 처음 만나 카카오톡으로 가볍게 대화 중이야. `;
   profile += `[절대 규칙]
 1. 반드시 카카오톡 대화처럼 아주 짧고 자연스럽게 말해.
-2. 한 번에 딱 1~2문장만 말해. 길게 말하지 마.
-3. 이름이나 MBTI는 절대 직접적으로 언급하지 마.
-4. 상대방을 존중하면서도 친근하게 대화해. `;
-  profile += `대화 가이드: ① 처음엔 나이·사는 곳·하는 일을 아주 짧게 녹여 자기소개 해. ② 상대방에게 눈치껏 짧게 질문을 던져. ③ 화제가 나오면 그 주제(${topicRule})로 짧게 핑퐁해.`;
+2. 한 번에 딱 1~2문장만 말해. 절대 길게 말하지 마.
+3. 상대방의 말에 먼저 충분히 공감하거나 반응해줘. (예: "헐 진짜?", "대박 ㅋㅋㅋ", "오 그렇구나")
+4. 반응을 한 뒤에는, 내가 선택한 주제(${topicRule})와 분위기로 자연스럽게 질문을 하나 던져서 대화를 이어가.
+5. 이름이나 MBTI는 절대 직접적으로 언급하지 마. `;
+
+  // 사용자 피드백 반영 (나답게 학습)
+  if (stylePreferences.likes.length > 0) {
+    profile += `[선호하는 말투 예시 (이런 뉘앙스와 말투를 적극 사용해봐)]: "${stylePreferences.likes.join('", "')}" `;
+  }
+  if (stylePreferences.dislikes.length > 0) {
+    profile += `[피해야 할 말투 예시 (이런 식의 표현이나 뉘앙스는 절대 쓰지 마)]: "${stylePreferences.dislikes.join('", "')}" `;
+  }
 
   return profile;
 }
+
+// ── 피드백 엔드포인트 ──
+app.post('/api/feedback', (req, res) => {
+  const { type, text } = req.body;
+  if (!text) return res.json({ success: false });
+
+  // 간단하게 텍스트 그대로 저장 (실제 서비스라면 키워드나 스타일로 추상화)
+  if (type === 'like' && !stylePreferences.likes.includes(text)) {
+    stylePreferences.likes.push(text);
+    // 싫어요 목록에 있으면 제거
+    stylePreferences.dislikes = stylePreferences.dislikes.filter(t => t !== text);
+  } else if (type === 'dislike' && !stylePreferences.dislikes.includes(text)) {
+    stylePreferences.dislikes.push(text);
+    // 좋아요 목록에 있으면 제거
+    stylePreferences.likes = stylePreferences.likes.filter(t => t !== text);
+  }
+
+  res.json({ success: true, likes: stylePreferences.likes.length, dislikes: stylePreferences.dislikes.length });
+});
 
 // ── SSE 스트리밍 엔드포인트 ──────────────────────────────────────────────────
 app.get('/api/stream', async (req, res) => {

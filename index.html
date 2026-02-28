@@ -398,6 +398,35 @@
       gap: 10px;
     }
 
+    /* ── 피드백 (좋아요/싫어요) 버튼 ── */
+    .feedback-btns {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+      margin-left: 2px;
+    }
+
+    .feedback-btns button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      opacity: 0.5;
+      transition: all 0.2s;
+      padding: 2px 4px;
+    }
+
+    .feedback-btns button:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .feedback-btns button.active {
+      opacity: 1;
+      background: #edeaff;
+      border-radius: 4px;
+    }
+
     .msg {
       display: flex;
       align-items: flex-end;
@@ -887,7 +916,7 @@
         const { ageStr } = calcAgeAndGen(a_birth);
         if (ageStr) {
           const myAgeNum = parseInt(ageStr.match(/\d+/)[0]);
-          const diff = Math.floor(Math.random() * 21) - 10;
+          const diff = Math.floor(Math.random() * 11) - 5; // ±5세
           matchBAge = `${myAgeNum + diff}살`;
         }
         document.getElementById('match-desc').textContent = `나이 ${matchBAge || '?'} · 자동 MBTI 매칭 완료`;
@@ -907,6 +936,10 @@
       const row = document.createElement('div');
       row.className = `msg ${isA ? '' : 'right'}`;
 
+      // 고유 메시지 ID (피드백용)
+      const msgId = 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+      row.dataset.msgId = msgId;
+
       const av = document.createElement('div');
       av.className = `avatar ${isA ? 'avatar-a' : 'avatar-b'}`;
       av.textContent = '#' + mbti.substring(0, 2);
@@ -925,6 +958,18 @@
       group.appendChild(bub);
       row.appendChild(av);
       row.appendChild(group);
+
+      // 내가 아닌 상대방(봇)의 메시지인 경우에만 좋아요/싫어요 버튼 추가
+      if (!isA) {
+        const fbGroup = document.createElement('div');
+        fbGroup.className = 'feedback-btns';
+        fbGroup.innerHTML = `
+          <button onclick="sendFeedback('${msgId}', 'like', this)" title="나다워">👍</button>
+          <button onclick="sendFeedback('${msgId}', 'dislike', this)" title="아닌데">👎</button>
+        `;
+        group.appendChild(fbGroup);
+      }
+
       msgs.appendChild(row);
       row.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
@@ -1030,6 +1075,23 @@
       document.getElementById('match-result').classList.add('hidden');
       document.getElementById('btn-start').classList.add('hidden');
       go(1);
+    }
+
+    /* ── 말투 학습 피드백 전송 ── */
+    async function sendFeedback(msgId, type, btnEl) {
+      const container = btnEl.parentElement;
+      container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+
+      try {
+        await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ msgId, type, text: container.parentElement.querySelector('.bubble').textContent })
+        });
+      } catch (err) {
+        console.error('Feedback error:', err);
+      }
     }
 
   </script>
