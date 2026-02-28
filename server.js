@@ -36,7 +36,7 @@ const QUIZ_CTX = {
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // ── 봇 시스템 프롬프트 생성 ────────────────────────────────────────────────────
-function buildPrompt({ mbti, age, job, detail, city, hobbies, otherMbti, moodCtx, convStyle, emotionStyle, tone, genStyle }) {
+function buildPrompt({ mbti, age, job, detail, city, hobbies, otherMbti, moodCtx, convStyle, emotionStyle, tone, genStyle, kakaoAnalysis, relStyle, combo, gender }) {
   let profile = `너는 ${PERSONAS[mbti]} `;
 
   // 인구통계 자연어 조합
@@ -65,6 +65,18 @@ function buildPrompt({ mbti, age, job, detail, city, hobbies, otherMbti, moodCtx
   // 말투 톤: 예) '유쾌함 70%, 진지함 30%'
   if (tone) profile += `말투 톤은 ${tone}야. 이 비율에 맞게 대화해줘. `;
 
+  // 관계 스타일
+  if (relStyle) profile += `관계 스타일은 ${relStyle}. `;
+
+  // 나를 한 줄로 (조합 문장)
+  if (combo) profile += `자기소개: ${combo} `;
+
+  // 성별
+  if (gender && gender !== '선택 안 함') profile += `성별은 ${gender}야. `;
+
+  // 카카오톡 말투 분석 결과
+  if (kakaoAnalysis) profile += `실제 말투 데이터: ${kakaoAnalysis} 이 데이터를 참고해서 최대한 이 사람의 실제 말투처럼 대화해줘. `;
+
   // 세대 스타일 (생년월일 기반, UI에 표시 안 함)
   if (genStyle) profile += `세대 특성: ${genStyle}. `;
 
@@ -85,6 +97,7 @@ app.get('/api/stream', async (req, res) => {
     mbti1, mbti2,
     a_age, a_job, a_detail, a_city, a_hobbies,   // 나의 프로필
     a_convStyle, a_emotionStyle, a_tone, a_genStyle, // 성격 스타일 + 세대
+    a_relStyle, a_combo, a_gender, a_kakao,         // 관계스타일·자기소개·성별·카톡분석
     b_age, b_job, b_detail,                        // 상대방 프로필
     q1, q2, q3,                                    // 오늘 기분
   } = req.query;
@@ -110,6 +123,7 @@ app.get('/api/stream', async (req, res) => {
     mbti: mbti1, age: a_age, job: a_job, detail: a_detail,
     city: a_city, hobbies: a_hobbies, otherMbti: mbti2, moodCtx,
     convStyle: a_convStyle, emotionStyle: a_emotionStyle, tone: a_tone, genStyle: a_genStyle,
+    relStyle: a_relStyle, combo: a_combo, gender: a_gender, kakaoAnalysis: a_kakao,
   });
 
   const sysB = buildPrompt({

@@ -215,6 +215,47 @@
     @keyframes bns { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
 
     .hidden { display: none !important; }
+
+    /* ── 카톡 업로드 ── */
+    .upload-zone {
+      border: 2px dashed #d0cbff; border-radius: 14px;
+      padding: 22px 16px; text-align: center; cursor: pointer;
+      background: #faf9ff; transition: all 0.2s;
+    }
+    .upload-zone:hover { border-color: #6c63ff; background: #edeaff; }
+    .upload-zone.drag  { border-color: #6c63ff; background: #edeaff; }
+    .upload-zone.done  { border-style: solid; border-color: #6c63ff; background: #edeaff; cursor: default; }
+    .upload-icon { font-size: 2rem; margin-bottom: 6px; }
+    .upload-text { font-size: 0.9rem; font-weight: 700; color: #555; margin-bottom: 3px; }
+    .upload-sub  { font-size: 0.75rem; color: #aaa; }
+
+    .sender-pick { margin-top: 14px; }
+    .sender-pick-title { font-size: 0.78rem; font-weight: 700; color: #888; margin-bottom: 8px; }
+    .sender-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sender-btn {
+      padding: 10px 16px; border: 2px solid #ebebeb; border-radius: 22px;
+      font-size: 0.83rem; font-weight: 700; cursor: pointer;
+      background: white; color: #666; transition: all 0.15s;
+    }
+    .sender-btn:active { transform: scale(0.96); }
+    .sender-btn.on { border-color: #6c63ff; background: #edeaff; color: #6c63ff; }
+
+    .analysis-card {
+      margin-top: 12px; padding: 14px 16px;
+      background: linear-gradient(135deg, #f0eeff, #faf9ff);
+      border-radius: 14px; border: 1.5px solid #d4d0ff;
+    }
+    .analysis-title { font-size: 0.8rem; font-weight: 800; color: #6c63ff; margin-bottom: 10px; }
+    .analysis-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .a-badge {
+      padding: 5px 11px; background: white; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 700; color: #555;
+      border: 1px solid #e0ddff;
+    }
+    .auto-filled-notice {
+      font-size: 0.74rem; color: #888;
+      display: flex; align-items: center; gap: 4px;
+    }
   </style>
 </head>
 <body>
@@ -268,6 +309,38 @@
         <option>광주/전라</option>
         <option>기타 지방</option>
       </select>
+    </div>
+
+    <hr class="divider">
+
+    <div class="field" style="margin-bottom:0;">
+      <label>카카오톡 대화 분석 <span style="color:#b0acff;font-weight:600;">(선택)</span></label>
+      <p style="font-size:0.75rem;color:#bbb;margin-bottom:10px;">내 말투를 학습해 더 나다운 디토를 만들어요</p>
+
+      <div class="upload-zone" id="uploadZone"
+        onclick="document.getElementById('kakaoFile').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="handleDrop(event)">
+        <div class="upload-icon" id="uploadIcon">💬</div>
+        <div class="upload-text" id="uploadText">카카오톡 .txt 파일 업로드</div>
+        <div class="upload-sub"  id="uploadSub">내보내기 → 텍스트 파일 저장</div>
+        <input type="file" id="kakaoFile" accept=".txt" style="display:none"
+          onchange="handleKakaoFile(this.files[0])">
+      </div>
+
+      <!-- 발신자 선택 -->
+      <div class="sender-pick hidden" id="senderPickWrap">
+        <div class="sender-pick-title">이 대화에서 나는 누구예요?</div>
+        <div class="sender-btns" id="senderBtns"></div>
+      </div>
+
+      <!-- 분석 결과 -->
+      <div class="analysis-card hidden" id="analysisResult">
+        <div class="analysis-title">✨ 말투 분석 완료</div>
+        <div class="analysis-badges" id="analysisBadges"></div>
+        <div class="auto-filled-notice">⚡ 성격 스타일이 자동으로 채워졌어요</div>
+      </div>
     </div>
 
     <div class="btn-wrap">
@@ -553,6 +626,183 @@
 </div>
 
 <script>
+/* ═══════════════════════════════════════
+   카카오톡 파일 파서 & 말투 분석
+═══════════════════════════════════════ */
+
+let kakaoAnalysis = null; // 최종 분석 결과 (SSE 전달용)
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) handleKakaoFile(file);
+}
+
+function handleKakaoFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    const msgs = parseKakaoTxt(text);
+    if (msgs.length === 0) {
+      alert('대화 내용을 인식하지 못했어요. 카카오톡 내보내기 → 텍스트 파일(.txt)로 저장한 파일을 올려주세요.');
+      return;
+    }
+    showSenderPicker(msgs);
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+/* ── 카톡 .txt 파서 (PC + 모바일 형식 지원) ── */
+function parseKakaoTxt(text) {
+  const lines = text.split(/\r?\n/);
+  const msgs = [];
+
+  // Format A (PC): [이름] [오전/오후 H:MM] 메시지
+  const reA = /^\[([^\]]+)\] \[(?:오전|오후) \d{1,2}:\d{2}\] (.+)$/;
+
+  // Format B (모바일 신): YYYY년 M월 D일 오전/오후 H:MM, 이름 : 메시지
+  const reB = /^\d{4}년 \d{1,2}월 \d{1,2}일 (?:오전|오후) \d{1,2}:\d{2}, (.+?) : (.+)$/;
+
+  // Format C (모바일 구): [날짜 오전/오후 H:MM:SS] 이름 : 메시지
+  const reC = /^\[[\d./]+ (?:오전|오후) \d{1,2}:\d{2}(?::\d{2})?\] (.+?) : (.+)$/;
+
+  for (const line of lines) {
+    const tl = line.trim();
+    let m;
+    if ((m = reA.exec(tl))) {
+      msgs.push({ sender: m[1].trim(), text: m[2].trim() });
+    } else if ((m = reB.exec(tl))) {
+      msgs.push({ sender: m[1].trim(), text: m[2].trim() });
+    } else if ((m = reC.exec(tl))) {
+      msgs.push({ sender: m[1].trim(), text: m[2].trim() });
+    }
+  }
+  return msgs;
+}
+
+/* ── 발신자 목록 표시 → 선택 ── */
+function showSenderPicker(msgs) {
+  // 발신자별 메시지 수 집계
+  const countMap = {};
+  msgs.forEach(({ sender }) => {
+    countMap[sender] = (countMap[sender] || 0) + 1;
+  });
+  // 시스템/알림 발신자 제거 (메시지 수 5개 미만)
+  const senders = Object.entries(countMap)
+    .filter(([, cnt]) => cnt >= 5)
+    .sort((a, b) => b[1] - a[1])
+    .map(([sender]) => sender);
+
+  if (senders.length === 0) {
+    alert('발신자를 인식하지 못했어요. 파일 형식을 확인해주세요.');
+    return;
+  }
+
+  // 업로드 존 업데이트
+  const zone = document.getElementById('uploadZone');
+  zone.classList.add('done');
+  zone.onclick = null;
+  document.getElementById('uploadIcon').textContent = '✅';
+  document.getElementById('uploadText').textContent = `${msgs.length}개 메시지 인식됨`;
+  document.getElementById('uploadSub').textContent = '아래에서 나를 선택해주세요';
+
+  // 발신자 버튼 생성
+  const btns = document.getElementById('senderBtns');
+  btns.innerHTML = '';
+  senders.forEach(sender => {
+    const btn = document.createElement('button');
+    btn.className = 'sender-btn';
+    btn.textContent = `${sender} (${countMap[sender]}개)`;
+    btn.onclick = () => {
+      document.querySelectorAll('.sender-btn').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      const myMsgs = msgs.filter(m => m.sender === sender).map(m => m.text);
+      runAnalysis(myMsgs);
+    };
+    btns.appendChild(btn);
+  });
+
+  document.getElementById('senderPickWrap').classList.remove('hidden');
+}
+
+/* ── 말투 분석 ── */
+function runAnalysis(myMsgs) {
+  const total = myMsgs.length;
+  if (total === 0) return;
+
+  const kkReg    = /[ㅋㅎ]/;
+  const emojiReg = /[\u{1F300}-\u{1FFFF}\u{2600}-\u{27FF}]/u;
+  const shortReg = /^.{1,8}$/;
+
+  let kkCnt = 0, emojiCnt = 0, qCnt = 0, exCnt = 0, shortCnt = 0, totalLen = 0;
+
+  myMsgs.forEach(t => {
+    totalLen += t.length;
+    if (kkReg.test(t))    kkCnt++;
+    if (emojiReg.test(t)) emojiCnt++;
+    if (t.endsWith('?') || t.endsWith('?')) qCnt++;
+    if (t.includes('!') || t.includes('!')) exCnt++;
+    if (shortReg.test(t)) shortCnt++;
+  });
+
+  const avgLen   = Math.round(totalLen / total);
+  const kkRate   = Math.round(kkCnt   / total * 100);
+  const emojiRate= Math.round(emojiCnt/ total * 100);
+  const qRate    = Math.round(qCnt    / total * 100);
+  const exRate   = Math.round(exCnt   / total * 100);
+  const shortRate= Math.round(shortCnt/ total * 100);
+
+  // 배지 텍스트 생성
+  const badges = [];
+  badges.push(avgLen <= 12 ? '📝 짧은 메시지 스타일' : avgLen >= 30 ? '📝 긴 메시지 스타일' : '📝 중간 길이');
+  badges.push(kkRate >= 30 ? '😄 ㅋㅎ 자주 씀' : kkRate >= 10 ? '😊 가끔 ㅋㅎ' : '🧐 ㅋㅎ 거의 안 씀');
+  if (emojiRate >= 20) badges.push('😎 이모지 자주 씀');
+  if (qRate >= 15) badges.push('❓ 질문 많이 함');
+  if (exRate >= 25) badges.push('❗ 감탄사 많음');
+
+  // 분석 결과 저장 (서버 전달용)
+  kakaoAnalysis = `메시지 ${total}개 분석: 평균길이 ${avgLen}자, ㅋㅎ사용 ${kkRate}%, 이모지 ${emojiRate}%, 질문 ${qRate}%.`;
+
+  // 배지 표시
+  const badgeWrap = document.getElementById('analysisBadges');
+  badgeWrap.innerHTML = badges.map(b => `<span class="a-badge">${b}</span>`).join('');
+  document.getElementById('analysisResult').classList.remove('hidden');
+
+  // Step 3 자동 채우기
+  autoFillFromAnalysis({ kkRate, emojiRate, qRate, exRate, avgLen, shortRate });
+}
+
+/* ── 분석 결과 → Step 3 자동 채우기 ── */
+function autoFillFromAnalysis({ kkRate, emojiRate, qRate, avgLen }) {
+  // 말투 톤 슬라이더 (kkRate 높을수록 유쾌함)
+  const toneVal = Math.min(90, Math.max(10, kkRate * 1.5 + 20));
+  document.getElementById('a_tone_slider').value = Math.round(toneVal);
+  updateToneLabel(Math.round(toneVal));
+
+  // 대화 스타일 자동 선택
+  const convGroup = document.getElementById('a_convStyle_tags');
+  document.querySelectorAll('#a_convStyle_tags .tag').forEach(t => t.classList.remove('on'));
+  if (qRate >= 15) {
+    convGroup.querySelector('[data-val="먼저 말을 거는 편이야"]')?.classList.add('on');
+  } else if (avgLen >= 30) {
+    convGroup.querySelector('[data-val="깊은 주제를 선호해"]')?.classList.add('on');
+  } else if (kkRate >= 25) {
+    convGroup.querySelector('[data-val="가볍고 재밌는 대화를 선호해"]')?.classList.add('on');
+  } else {
+    convGroup.querySelector('[data-val="듣다가 맞장구치는 편이야"]')?.classList.add('on');
+  }
+
+  // 감정 표현 방식 자동 선택
+  document.querySelectorAll('#a_emotionStyle_tags .tag').forEach(t => t.classList.remove('on'));
+  if (emojiRate >= 20) {
+    document.querySelector('#a_emotionStyle_tags .tag[data-val="감정을 바로 표현하는 편이야"]')?.classList.add('on');
+  } else {
+    document.querySelector('#a_emotionStyle_tags .tag[data-val="감정을 속으로 삭히는 편이야"]')?.classList.add('on');
+  }
+}
+
 /* ── MBTI 초기화 ── */
 const MBTI_LIST = ['ENFP','ENFJ','ENTP','ENTJ','INFP','INFJ','INTP','INTJ','ESFP','ESFJ','ESTP','ESTJ','ISFP','ISFJ','ISTP','ISTJ'];
 const sel1 = document.getElementById('mbti1');
@@ -854,6 +1104,7 @@ function startChat() {
   if (a_genStyle)     p.set('a_genStyle', a_genStyle);
   if (comboSentence)  p.set('a_combo', comboSentence);
   if (selectedGender) p.set('a_gender', selectedGender);
+  if (kakaoAnalysis)  p.set('a_kakao', kakaoAnalysis);
   p.set('a_tone', a_tone);
   if (b_age)    p.set('b_age', b_age);
   if (b_job)    p.set('b_job', b_job);
