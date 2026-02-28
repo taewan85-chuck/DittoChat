@@ -26,24 +26,23 @@ const PERSONAS = {
   ISTJ: '신중하고 책임감 강하며 규칙을 중시하는 ISTJ야. 사실에 근거하여 조목조목 이야기하고, 약간 딱딱하지만 신뢰할 수 있어.',
 };
 
-// ── 오늘 기분 퀴즈 맥락 ────────────────────────────────────────────────────────
-const QUIZ_CTX = {
-  q1: { A: '오늘 너무 바빠서 정신이 없었어', B: '오늘 여유롭고 평온한 하루였어', C: '오늘 좀 힘들고 지쳤어', D: '오늘 기분 좋은 일이 있었어' },
-  q2: { A: '지금 맛있는 게 너무 먹고 싶어', B: '지금 그냥 누워서 쉬고 싶어', C: '지금 재밌는 걸 하고 싶어', D: '지금 누군가랑 수다 떨고 싶어' },
-  q3: { A: '오늘 하루 열정적으로 움직였어', B: '오늘 차분하게 생각하는 날이었어', C: '오늘 감성적인 기분이 들었어', D: '오늘 아이디어가 넘쳤어' },
-};
+// ── 오늘 기분 퀴즈 맥락 부분 삭제됨 ────────────────────────────────────────────────────────
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // ── 봇 시스템 프롬프트 생성 ────────────────────────────────────────────────────
-function buildPrompt({ mbti, age, job, detail, city, hobbies, otherMbti, moodCtx, convStyle, emotionStyle, tone, genStyle }) {
+function buildPrompt({ mbti, name, nickname, age, job, detail, city, hobbies, otherMbti, topic, convStyle, emotionStyle, tone, genStyle, kakaoStyle }) {
   let profile = `너는 ${PERSONAS[mbti]} `;
+
+  // 닉네임 / 이름 추가
+  if (nickname) profile += `네 별명(애칭)은 '${nickname}'야. `;
+  else if (name && name !== mbti) profile += `네 이름은 '${name}'야. `;
 
   // 인구통계 자연어 조합
   const demo = [];
-  if (age)  demo.push(age);
+  if (age) demo.push(age);
   if (city) demo.push(`${city}에 살고`);
-  if (job)  demo.push(job);
+  if (job) demo.push(job);
   if (demo.length) profile += demo.join(', ') + '야. ';
 
   // 세부 정보 (전공, 업무 등)
@@ -68,13 +67,22 @@ function buildPrompt({ mbti, age, job, detail, city, hobbies, otherMbti, moodCtx
   // 세대 스타일 (생년월일 기반, UI에 표시 안 함)
   if (genStyle) profile += `세대 특성: ${genStyle}. `;
 
-  // 오늘 기분
-  if (moodCtx) profile += `오늘 상황: ${moodCtx}. `;
+  // 대화 주제
+  let topicRule = "일상적인 대화";
+  if (topic) {
+    topicRule = topic;
+    profile += `명심해: 지금 주요 대화 주제는 '${topic}'(이)야. 이 주제를 중심으로 자연스럽게 대화를 이끌어가줘. `;
+  }
+
+  // 카카오톡 실제 말투 반영
+  if (kakaoStyle) {
+    profile += `특히 다음은 네 평소 카카오톡 대화 스타일이야. 이 말투, 어휘, 리액션 방식을 최대한 반영해서 유사하게 말해봐: "${kakaoStyle}" `;
+  }
 
   // 대화 지시
   profile += `지금 ${otherMbti} 성격의 친구를 처음 만나 가볍게 대화 중이야. `;
-  profile += `반드시 딱 한 문장으로만 말해. 자연스러운 한국어 구어체로 말해. 이름이나 MBTI는 절대 언급하지 마. `;
-  profile += `대화 가이드: ① 처음엔 나이·사는 곳·하는 일을 자연스럽게 녹여서 자기소개 해. ② 상대방이 무슨 일 하는지 궁금해하며 물어봐. ③ 공통 관심사나 차이가 나오면 그 주제로 자연스럽게 이어가.`;
+  profile += `반드시 딱 한 문장으로만 말해. 자연스러운 한국어 구어체로 말해. 이름이나 MBTI는 절대 직접적으로 언급하지 마. `;
+  profile += `대화 가이드: ① 처음엔 나이·사는 곳·하는 일을 자연스럽게 녹여서 자기소개 해. ② 상대방이 무슨 일 하는지 궁금해하며 물어봐. ③ 공통 관심사나 차이가 나오면 그 주제(${topicRule})로 자연스럽게 이어가.`;
 
   return profile;
 }
@@ -83,10 +91,11 @@ function buildPrompt({ mbti, age, job, detail, city, hobbies, otherMbti, moodCtx
 app.get('/api/stream', async (req, res) => {
   const {
     mbti1, mbti2,
-    a_age, a_job, a_detail, a_city, a_hobbies,   // 나의 프로필
+    a_name, a_nickname, a_age, a_job, a_detail, a_city, a_hobbies,   // 나의 프로필
     a_convStyle, a_emotionStyle, a_tone, a_genStyle, // 성격 스타일 + 세대
     b_age, b_job, b_detail,                        // 상대방 프로필
-    q1, q2, q3,                                    // 오늘 기분
+    topic,                                         // 대화 주제
+    kakao_style,                                   // 카톡 실제 말투
   } = req.query;
 
   if (!PERSONAS[mbti1] || !PERSONAS[mbti2]) {
@@ -99,22 +108,16 @@ app.get('/api/stream', async (req, res) => {
 
   const send = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
 
-  // 오늘 기분 맥락
-  const moodCtx = [
-    q1 && QUIZ_CTX.q1[q1],
-    q2 && QUIZ_CTX.q2[q2],
-    q3 && QUIZ_CTX.q3[q3],
-  ].filter(Boolean).join('. ');
-
   const sysA = buildPrompt({
-    mbti: mbti1, age: a_age, job: a_job, detail: a_detail,
-    city: a_city, hobbies: a_hobbies, otherMbti: mbti2, moodCtx,
+    mbti: mbti1, name: a_name, nickname: a_nickname, age: a_age, job: a_job, detail: a_detail,
+    city: a_city, hobbies: a_hobbies, otherMbti: mbti2, topic,
     convStyle: a_convStyle, emotionStyle: a_emotionStyle, tone: a_tone, genStyle: a_genStyle,
+    kakaoStyle: kakao_style,
   });
 
   const sysB = buildPrompt({
-    mbti: mbti2, age: b_age, job: b_job, detail: b_detail,
-    city: null, hobbies: null, otherMbti: mbti1, moodCtx: null,
+    mbti: mbti2, name: null, nickname: null, age: b_age, job: b_job, detail: b_detail,
+    city: null, hobbies: null, otherMbti: mbti1, topic,
   });
 
   const chatA = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: sysA }).startChat();
