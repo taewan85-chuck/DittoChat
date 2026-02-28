@@ -2,135 +2,194 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>디토챗 — MBTI 봇 대화</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* ── 리셋 & 기본 ── */
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f0f2f5;
+      background: #f5f4ff;
       min-height: 100vh;
       display: flex; flex-direction: column; align-items: center;
-      padding: 32px 16px 60px;
+      padding-bottom: 80px;
     }
-    h1 { font-size: 1.9rem; color: #1a1a2e; margin-bottom: 4px; letter-spacing: -0.5px; }
-    .subtitle { color: #999; margin-bottom: 22px; font-size: 0.9rem; }
 
-    /* ── 스텝 인디케이터 ── */
-    .stepper { display: flex; align-items: center; gap: 0; margin-bottom: 24px; }
-    .s-dot {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: #e0e0e0; color: #aaa;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.72rem; font-weight: 700;
-      transition: all 0.3s;
-      flex-shrink: 0;
+    /* ── 앱 헤더 ── */
+    .app-header {
+      width: 100%; max-width: 480px;
+      padding: 28px 20px 10px;
+      text-align: center;
     }
-    .s-dot.active { background: #6c63ff; color: white; }
-    .s-dot.done   { background: #b0acff; color: white; }
-    .s-line { width: 32px; height: 2px; background: #e0e0e0; transition: background 0.3s; }
-    .s-line.done { background: #b0acff; }
-    .s-label { font-size: 0.72rem; color: #aaa; margin-left: 8px; white-space: nowrap; }
-    .s-label.active { color: #6c63ff; font-weight: 700; }
+    .app-title { font-size: 1.6rem; font-weight: 900; color: #1a1a2e; letter-spacing: -1px; }
+    .app-sub { font-size: 0.82rem; color: #aaa; margin-top: 4px; }
+
+    /* ── 상단 진행 바 (sticky) ── */
+    .top-bar {
+      position: sticky; top: 0; z-index: 100;
+      width: 100%; max-width: 480px;
+      background: white;
+      padding: 14px 20px 12px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+    }
+    .top-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .step-counter { font-size: 0.78rem; color: #bbb; font-weight: 600; }
+    .step-counter strong { color: #6c63ff; font-size: 1rem; }
+    .step-name { font-size: 0.85rem; font-weight: 800; color: #1a1a2e; }
+    .progress-track {
+      height: 6px; background: #ebebeb; border-radius: 99px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6c63ff, #a78bfa);
+      border-radius: 99px;
+      transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── 컨테이너 ── */
+    .container {
+      width: 100%; max-width: 480px;
+      padding: 20px 16px;
+    }
 
     /* ── 카드 ── */
     .card {
-      background: white; border-radius: 16px; padding: 22px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-      width: 100%; max-width: 480px; margin-bottom: 16px;
+      background: white; border-radius: 20px;
+      padding: 24px 20px;
+      box-shadow: 0 2px 16px rgba(108,99,255,0.08);
+      margin-bottom: 12px;
     }
-    .card-title { font-weight: 700; font-size: 1rem; color: #1a1a2e; margin-bottom: 3px; }
-    .card-sub   { font-size: 0.8rem; color: #bbb; margin-bottom: 18px; }
+    .card-title {
+      font-weight: 800; font-size: 1.15rem; color: #1a1a2e;
+      margin-bottom: 4px; letter-spacing: -0.3px;
+    }
+    .card-sub { font-size: 0.82rem; color: #bbb; margin-bottom: 20px; }
 
     /* ── 폼 요소 ── */
-    .row { display: flex; gap: 10px; margin-bottom: 14px; }
-    .field { display: flex; flex-direction: column; gap: 5px; }
-    .field.half { flex: 1; }
-    .field.full  { width: 100%; margin-bottom: 14px; }
-    .field label { font-size: 0.78rem; font-weight: 700; color: #777; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .field label { font-size: 0.78rem; font-weight: 700; color: #888; letter-spacing: 0.2px; }
     select, input[type=text] {
-      padding: 10px 12px; border: 2px solid #ebebeb; border-radius: 10px;
-      font-size: 0.92rem; background: white; color: #222;
-      transition: border-color 0.2s; width: 100%;
+      padding: 14px 16px; border: 2px solid #ebebeb; border-radius: 12px;
+      font-size: 1rem; background: white; color: #222;
+      transition: border-color 0.2s; width: 100%; appearance: none;
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px;
     }
     select:focus, input:focus { outline: none; border-color: #6c63ff; }
     input::placeholder { color: #ccc; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    /* ── 취미 태그 ── */
-    .tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+    /* ── 성별 버튼 ── */
+    .gender-row { display: flex; gap: 8px; }
+    .gender-btn {
+      flex: 1; padding: 16px 8px; border: 2px solid #ebebeb;
+      border-radius: 12px; background: white; font-size: 0.88rem;
+      font-weight: 700; color: #666; cursor: pointer;
+      transition: all 0.15s; text-align: center;
+    }
+    .gender-btn:active { transform: scale(0.97); }
+    .gender-btn.on { border-color: #6c63ff; background: #edeaff; color: #6c63ff; }
+
+    /* ── 태그 (다중/단일 선택) ── */
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
     .tag {
-      padding: 6px 12px; border: 2px solid #ebebeb; border-radius: 20px;
-      font-size: 0.78rem; cursor: pointer; background: white;
+      padding: 11px 15px; border: 2px solid #ebebeb; border-radius: 22px;
+      font-size: 0.83rem; font-weight: 600; cursor: pointer; background: white;
       transition: all 0.15s; color: #666; user-select: none;
     }
-    .tag:hover  { border-color: #b0acff; }
-    .tag.on     { border-color: #6c63ff; background: #edeaff; color: #6c63ff; font-weight: 700; }
+    .tag:active { transform: scale(0.96); }
+    .tag.on { border-color: #6c63ff; background: #edeaff; color: #6c63ff; }
 
-    /* ── 성격 스타일 (단일 선택 태그) ── */
-    .style-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
-    .style-tag {
-      padding: 6px 14px; border: 2px solid #ebebeb; border-radius: 20px;
-      font-size: 0.78rem; cursor: pointer; background: white;
-      transition: all 0.15s; color: #666; user-select: none;
+    /* ── 섹션 ── */
+    .section { margin-bottom: 22px; }
+    .section-title { font-size: 0.85rem; font-weight: 800; color: #333; margin-bottom: 10px; }
+    hr.divider { border: none; border-top: 1px solid #f0f0f0; margin: 18px 0; }
+
+    /* ── 슬라이더 ── */
+    .slider-wrap { margin-top: 4px; }
+    .slider-ends { display: flex; justify-content: space-between; font-size: 0.75rem; color: #aaa; margin-bottom: 8px; }
+    input[type=range] { width: 100%; accent-color: #6c63ff; cursor: pointer; height: 28px; }
+    .slider-val { text-align: center; font-size: 0.82rem; color: #6c63ff; font-weight: 700; margin-top: 4px; }
+
+    /* ── 옵션 카드 (대형 퀴즈 버튼) ── */
+    .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .opt-card {
+      padding: 16px 10px; border: 2px solid #ebebeb; border-radius: 14px;
+      background: white; cursor: pointer; text-align: center;
+      transition: all 0.15s; color: #555;
     }
-    .style-tag:hover { border-color: #b0acff; }
-    .style-tag.on    { border-color: #6c63ff; background: #edeaff; color: #6c63ff; font-weight: 700; }
+    .opt-card:active { transform: scale(0.97); }
+    .opt-card.on { border-color: #6c63ff; background: #edeaff; color: #6c63ff; }
+    .opt-emoji { font-size: 1.6rem; display: block; margin-bottom: 6px; }
+    .opt-label { font-size: 0.8rem; font-weight: 700; line-height: 1.3; }
 
-    /* ── 말투 톤 슬라이더 ── */
-    .tone-wrap { margin-top: 6px; }
-    .tone-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #aaa; margin-bottom: 4px; }
-    .tone-value  { text-align: center; font-size: 0.78rem; color: #6c63ff; font-weight: 700; margin-top: 5px; }
-    input[type=range] {
-      width: 100%; accent-color: #6c63ff; cursor: pointer;
+    /* ── Step 5 나를 한 줄로 ── */
+    .combo-preview {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+      font-size: 0.92rem; color: #555; line-height: 2.2;
+      padding: 16px; background: #f7f6ff; border-radius: 14px; margin-bottom: 20px;
     }
-
-    /* ── 퀴즈 옵션 ── */
-    .quiz-section { margin-bottom: 18px; }
-    .quiz-title { font-size: 0.85rem; font-weight: 700; color: #555; margin-bottom: 8px; }
-    .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-    .opt-btn {
-      padding: 11px 8px; border: 2px solid #ebebeb; border-radius: 10px;
-      background: white; cursor: pointer; font-size: 0.78rem; text-align: center;
-      transition: all 0.15s; color: #555; line-height: 1.4;
+    .combo-chip {
+      background: #edeaff; color: #6c63ff; border-radius: 8px;
+      padding: 4px 10px; font-weight: 800; font-size: 0.83rem;
+      min-width: 72px; text-align: center;
+      border: 2px dashed #b0acff; cursor: default;
     }
-    .opt-btn:hover   { border-color: #b0acff; }
-    .opt-btn.selected { border-color: #6c63ff; background: #edeaff; color: #6c63ff; font-weight: 700; }
-    .opt-emoji { font-size: 1.2rem; display: block; margin-bottom: 3px; }
+    .combo-chip.filled { background: #6c63ff; color: white; border-style: solid; border-color: #6c63ff; }
+    .combo-group-title { font-size: 0.78rem; font-weight: 700; color: #aaa; margin-bottom: 8px; }
+    .combo-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .combo-opt {
+      padding: 11px 15px; border: 2px solid #ebebeb; border-radius: 22px;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer;
+      background: white; color: #666; transition: all 0.15s;
+    }
+    .combo-opt:active { transform: scale(0.96); }
+    .combo-opt.on { border-color: #6c63ff; background: #edeaff; color: #6c63ff; }
 
-    /* ── 버튼 ── */
+    /* ── 버튼 (대형) ── */
     .btn {
-      width: 100%; padding: 13px; background: #6c63ff; color: white;
-      border: none; border-radius: 10px; font-size: 0.97rem; font-weight: 700;
-      cursor: pointer; transition: background 0.2s, transform 0.15s;
+      width: 100%; padding: 18px; background: #6c63ff; color: white;
+      border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 800;
+      cursor: pointer; transition: background 0.2s, transform 0.1s;
+      letter-spacing: -0.2px;
     }
-    .btn:hover:not(:disabled) { background: #574fd6; transform: translateY(-1px); }
-    .btn:disabled { background: #c5c2f0; cursor: not-allowed; transform: none; }
+    .btn:hover:not(:disabled) { background: #574fd6; }
+    .btn:active:not(:disabled) { transform: scale(0.98); }
+    .btn:disabled { background: #c5c2f0; cursor: not-allowed; }
     .btn-ghost {
-      width: 100%; padding: 10px; background: transparent; color: #aaa;
-      border: none; font-size: 0.82rem; cursor: pointer; margin-top: 6px;
+      width: 100%; padding: 16px; background: transparent; color: #aaa;
+      border: 2px solid #ebebeb; border-radius: 14px;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer; margin-top: 8px;
+      transition: all 0.15s;
     }
-    .btn-ghost:hover { color: #6c63ff; }
+    .btn-ghost:active { transform: scale(0.98); }
+    .btn-ghost:hover { border-color: #b0acff; color: #6c63ff; }
+    .btn-wrap { display: flex; flex-direction: column; gap: 0; margin-top: 24px; }
 
     /* ── 채팅 ── */
-    .chat-wrap { width: 100%; max-width: 600px; }
+    .chat-wrap { width: 100%; max-width: 480px; padding: 16px; }
     .chat-box {
-      background: white; border-radius: 16px; padding: 20px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      background: white; border-radius: 20px; padding: 20px;
+      box-shadow: 0 2px 16px rgba(108,99,255,0.08);
     }
     .chat-header {
       display: flex; justify-content: space-between; align-items: center;
       padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid #f2f2f2;
     }
-    .chat-title { font-weight: 700; font-size: 0.95rem; color: #1a1a2e; }
+    .chat-title { font-weight: 800; font-size: 0.95rem; color: #1a1a2e; }
     .badges { display: flex; gap: 8px; }
-    .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+    .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
     .badge-a { background: #edeaff; color: #6c63ff; }
     .badge-b { background: #ffe8e8; color: #ff6b6b; }
 
     .messages { display: flex; flex-direction: column; gap: 10px; }
     .msg { display: flex; align-items: flex-end; gap: 7px; }
     .msg.right { flex-direction: row-reverse; }
-
     .avatar {
       width: 34px; height: 34px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
@@ -138,31 +197,17 @@
     }
     .avatar-a { background: #edeaff; color: #6c63ff; }
     .avatar-b { background: #ffe8e8; color: #ff6b6b; }
-
-    .bubble {
-      max-width: 72%; padding: 10px 14px; border-radius: 18px;
-      font-size: 0.875rem; line-height: 1.6; color: #333;
-    }
+    .bubble { max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 0.9rem; line-height: 1.6; color: #333; }
     .bubble-a { background: #f5f3ff; border-bottom-left-radius: 4px; }
     .bubble-b { background: #fff3f3; border-bottom-right-radius: 4px; }
-
-    /* 발신자 이름 레이블 */
-    .msg-group { display: flex; flex-direction: column; gap: 3px; max-width: 72%; }
+    .msg-group { display: flex; flex-direction: column; gap: 3px; max-width: 75%; }
     .sender-name { font-size: 0.68rem; color: #bbb; padding: 0 4px; }
     .msg.right .sender-name { text-align: right; }
 
     /* 타이핑 커서 */
-    .cursor::after {
-      content: '|'; display: inline-block; margin-left: 1px;
-      animation: blink 0.6s infinite; color: #bbb; font-weight: 300;
-    }
+    .cursor::after { content: '|'; display: inline-block; margin-left: 1px; animation: blink 0.6s infinite; color: #bbb; font-weight: 300; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-    /* 타이핑 점 */
-    .dots-wrap {
-      padding: 10px 14px; border-radius: 18px;
-      display: flex; gap: 4px; align-items: center;
-    }
+    .dots-wrap { padding: 10px 14px; border-radius: 18px; display: flex; gap: 4px; align-items: center; }
     .dots-wrap.side-a { background: #f5f3ff; border-bottom-left-radius: 4px; }
     .dots-wrap.side-b { background: #fff3f3; border-bottom-right-radius: 4px; }
     .d { width: 5px; height: 5px; border-radius: 50%; background: #bbb; animation: bns 1.1s infinite; }
@@ -170,52 +215,49 @@
     @keyframes bns { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
 
     .hidden { display: none !important; }
-    .divider { border: none; border-top: 1px solid #f0f0f0; margin: 14px 0; }
   </style>
 </head>
 <body>
 
-<h1>디토챗 💬</h1>
-<p class="subtitle">나의 디토와 상대방의 디토가 처음 만나면?</p>
-
-<!-- 스텝 인디케이터 -->
-<div class="stepper" id="stepper">
-  <div class="s-dot active" id="sd1">1</div>
-  <div class="s-line" id="sl1"></div>
-  <div class="s-dot" id="sd2">2</div>
-  <div class="s-line" id="sl2"></div>
-  <div class="s-dot" id="sd3">3</div>
-  <div class="s-line" id="sl3"></div>
-  <div class="s-dot" id="sd4">4</div>
-  <span class="s-label active" id="stepLabel">MBTI 선택</span>
+<!-- 앱 헤더 -->
+<div class="app-header" id="appHeader">
+  <div class="app-title">디토챗 💬</div>
+  <div class="app-sub">나의 디토와 상대방의 디토가 처음 만나면?</div>
 </div>
 
-<!-- ─── Step 1: MBTI 선택 ─── -->
-<div class="card" id="step1">
-  <div class="card-title">MBTI 조합 선택 👀</div>
-  <div class="card-sub">어떤 두 성격이 대화할지 정해봐</div>
-  <div class="row">
-    <div class="field half">
-      <label>나의 MBTI</label>
-      <select id="mbti1"></select>
-    </div>
+<!-- 상단 진행 바 -->
+<div class="top-bar" id="topBar">
+  <div class="top-row">
+    <span class="step-counter"><strong id="curStep">1</strong> / 6</span>
+    <span class="step-name" id="stepName">기본 정보</span>
   </div>
-  <p style="font-size:0.78rem;color:#aaa;margin-top:-6px;margin-bottom:14px;">상대방은 궁합 목록에서 자동 매칭돼요 ✨</p>
-  <button class="btn" onclick="go(2)">다음 →</button>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill" style="width:16.66%"></div>
+  </div>
 </div>
 
-<!-- ─── Step 2: 나의 프로필 ─── -->
-<div class="card hidden" id="step2">
-  <div class="card-title">나의 프로필 🙋</div>
-  <div class="card-sub">더 나다운 디토를 만들어줄 거야</div>
+<!-- ══════════ STEP 1: 기본 정보 ══════════ -->
+<div class="container" id="step1">
+  <div class="card">
+    <div class="card-title">안녕하세요! 👋</div>
+    <div class="card-sub">나의 디토를 만들기 위한 기본 정보예요</div>
 
-  <div class="row">
-    <div class="field half">
+    <div class="field">
       <label>생년월일</label>
       <input type="text" id="a_birth" placeholder="YYYY-MM-DD" maxlength="10"
         oninput="formatBirthInput(this)">
     </div>
-    <div class="field half">
+
+    <div class="field">
+      <label>성별</label>
+      <div class="gender-row">
+        <button class="gender-btn" data-val="남성" onclick="selectGender(this)">👦 남성</button>
+        <button class="gender-btn" data-val="여성" onclick="selectGender(this)">👧 여성</button>
+        <button class="gender-btn" data-val="선택 안 함" onclick="selectGender(this)">🙂 무관</button>
+      </div>
+    </div>
+
+    <div class="field">
       <label>거주지</label>
       <select id="a_city">
         <option value="">선택</option>
@@ -227,161 +269,275 @@
         <option>기타 지방</option>
       </select>
     </div>
-  </div>
 
-  <div class="field full">
-    <label>직업/상황</label>
-    <select id="a_job" onchange="toggleDetail('a')">
-      <option value="">선택</option>
-      <option value="고등학생">고등학생</option>
-      <option value="대학생">대학생</option>
-      <option value="취준생">취준생 (구직 중)</option>
-      <option value="직장인">직장인</option>
-      <option value="프리랜서">프리랜서</option>
-      <option value="자영업자">자영업자</option>
-      <option value="기타">기타</option>
-    </select>
-  </div>
-
-  <!-- 조건부: 대학생/직장인/기타일 때 세부 정보 -->
-  <div class="field full hidden" id="a_detail_wrap">
-    <label id="a_detail_label">세부 정보</label>
-    <input type="text" id="a_detail" placeholder="예: 경영학과 2학년" maxlength="40">
-  </div>
-
-  <hr class="divider">
-
-  <div class="field full">
-    <label>취미 (여러 개 선택 가능)</label>
-    <div class="tags" id="a_hobbies_tags">
-      <span class="tag" data-val="운동/헬스">🏃 운동/헬스</span>
-      <span class="tag" data-val="게임">🎮 게임</span>
-      <span class="tag" data-val="유튜브/넷플릭스">📺 유튜브/넷플</span>
-      <span class="tag" data-val="독서">📚 독서</span>
-      <span class="tag" data-val="음악감상">🎵 음악감상</span>
-      <span class="tag" data-val="요리/맛집">🍳 요리/맛집</span>
-      <span class="tag" data-val="여행">✈️ 여행</span>
-      <span class="tag" data-val="카페">☕ 카페</span>
-      <span class="tag" data-val="쇼핑">🛍️ 쇼핑</span>
-      <span class="tag" data-val="그림/창작">🎨 그림/창작</span>
+    <div class="btn-wrap">
+      <button class="btn" onclick="go(2)">다음 →</button>
     </div>
   </div>
-
-  <hr class="divider">
-
-  <div class="card-title" style="font-size:0.9rem;margin-bottom:14px;">성격 스타일 ✨</div>
-
-  <div class="field full">
-    <label>대화 스타일</label>
-    <div class="style-tags" id="a_convStyle_tags">
-      <span class="style-tag" data-val="먼저 말을 거는 편이야">💬 먼저 말 거는 편</span>
-      <span class="style-tag" data-val="듣는 편이야">👂 듣는 편</span>
-      <span class="style-tag" data-val="상황에 따라 달라">🔄 상황따라 달라</span>
-    </div>
-  </div>
-
-  <div class="field full">
-    <label>감정 표현 방식</label>
-    <div class="style-tags" id="a_emotionStyle_tags">
-      <span class="style-tag" data-val="감정을 바로 표현하는 편이야">😊 바로 표현하는 편</span>
-      <span class="style-tag" data-val="감정을 삭히는 편이야">😶 삭히는 편</span>
-      <span class="style-tag" data-val="감정 표현이 중간이야">😐 중간</span>
-    </div>
-  </div>
-
-  <div class="field full">
-    <label>말투 톤</label>
-    <div class="tone-wrap">
-      <div class="tone-labels"><span>😄 유쾌함</span><span>🧐 진지함</span></div>
-      <input type="range" id="a_tone_slider" min="0" max="100" value="50" oninput="updateToneLabel(this.value)">
-      <div class="tone-value" id="a_tone_label">유쾌함 50% · 진지함 50%</div>
-    </div>
-  </div>
-
-  <button class="btn" onclick="go(3)">다음 →</button>
-  <button class="btn-ghost" onclick="go(1)">← 이전</button>
 </div>
 
-<!-- ─── Step 3: 상대방 프로필 ─── -->
-<div class="card hidden" id="step3">
-  <div class="card-title">상대방 프로필 🤔</div>
-  <div class="card-sub">상대방이 어떤 사람인지 설정해줘 (선택사항)</div>
+<!-- ══════════ STEP 2: MBTI ══════════ -->
+<div class="container hidden" id="step2">
+  <div class="card">
+    <div class="card-title">나의 MBTI 👀</div>
+    <div class="card-sub">어떤 유형인지 선택해줘</div>
 
-  <div class="row">
-    <div class="field half">
-      <label>연령대</label>
-      <select id="b_age">
-        <option value="">모름/비슷</option>
-        <option>10대</option>
-        <option>20대 초반</option>
-        <option>20대 후반</option>
-        <option>30대</option>
-        <option>40대 이상</option>
+    <div class="field">
+      <label>MBTI 유형</label>
+      <select id="mbti1">
+        <!-- JS로 채움 -->
       </select>
     </div>
-    <div class="field half">
+
+    <p style="font-size:0.78rem;color:#aaa;margin-bottom:4px;">✨ 상대방은 궁합 목록에서 자동 매칭돼요</p>
+
+    <div class="btn-wrap">
+      <button class="btn" onclick="go(3)">다음 →</button>
+      <button class="btn-ghost" onclick="go(1)">← 이전</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ STEP 3: 성격 스타일 ══════════ -->
+<div class="container hidden" id="step3">
+  <div class="card">
+    <div class="card-title">나의 성격 스타일 ✨</div>
+    <div class="card-sub">아바타가 더 나답게 말할 수 있어요</div>
+
+    <div class="section">
+      <div class="section-title">대화 스타일</div>
+      <div class="tags" id="a_convStyle_tags">
+        <span class="tag" data-val="먼저 말을 거는 편이야">💬 먼저 말 거는 편</span>
+        <span class="tag" data-val="듣다가 맞장구치는 편이야">👂 듣다가 맞장구</span>
+        <span class="tag" data-val="깊은 주제를 선호해">💡 깊은 주제 선호</span>
+        <span class="tag" data-val="가볍고 재밌는 대화를 선호해">😄 가볍고 재밌게</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <div class="section-title">감정 표현 방식</div>
+      <div class="tags" id="a_emotionStyle_tags">
+        <span class="tag" data-val="감정을 바로 표현하는 편이야">😊 바로 표현</span>
+        <span class="tag" data-val="감정을 속으로 삭히는 편이야">😶 속으로 삭힘</span>
+        <span class="tag" data-val="위로받고 싶어">🤗 위로 원해</span>
+        <span class="tag" data-val="해결책이 필요해">🔧 해결책 원해</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section">
+      <div class="section-title">관계 스타일</div>
+      <div class="tags" id="a_relStyle_tags">
+        <span class="tag" data-val="소수와 깊은 관계를 선호해">🤝 소수 깊게</span>
+        <span class="tag" data-val="넓고 다양한 관계를 선호해">🌐 넓고 다양하게</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section" style="margin-bottom:0;">
+      <div class="section-title">말투 톤</div>
+      <div class="slider-wrap">
+        <div class="slider-ends"><span>😄 유쾌함</span><span>🧐 진지함</span></div>
+        <input type="range" id="a_tone_slider" min="0" max="100" value="50"
+          oninput="updateToneLabel(this.value)">
+        <div class="slider-val" id="a_tone_label">유쾌함 50% · 진지함 50%</div>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn" onclick="go(4)">다음 →</button>
+      <button class="btn-ghost" onclick="go(2)">← 이전</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ STEP 4: 관심사 & 직업 ══════════ -->
+<div class="container hidden" id="step4">
+  <div class="card">
+    <div class="card-title">관심사 & 직업 🎯</div>
+    <div class="card-sub">아바타의 대화 주제 풀이 만들어져요</div>
+
+    <div class="section">
+      <div class="section-title">취미 (여러 개 선택 가능)</div>
+      <div class="tags" id="a_hobbies_tags">
+        <span class="tag" data-val="운동/헬스">🏃 운동/헬스</span>
+        <span class="tag" data-val="게임">🎮 게임</span>
+        <span class="tag" data-val="유튜브/넷플릭스">📺 유튜브/넷플</span>
+        <span class="tag" data-val="독서">📚 독서</span>
+        <span class="tag" data-val="음악감상">🎵 음악감상</span>
+        <span class="tag" data-val="요리/맛집">🍳 요리/맛집</span>
+        <span class="tag" data-val="여행">✈️ 여행</span>
+        <span class="tag" data-val="카페">☕ 카페</span>
+        <span class="tag" data-val="쇼핑">🛍️ 쇼핑</span>
+        <span class="tag" data-val="그림/창작">🎨 그림/창작</span>
+        <span class="tag" data-val="재테크">💰 재테크</span>
+        <span class="tag" data-val="자기계발">📈 자기계발</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="field">
       <label>직업/상황</label>
-      <select id="b_job" onchange="toggleDetail('b')">
-        <option value="">모름/자유</option>
+      <select id="a_job" onchange="toggleDetail('a')">
+        <option value="">선택</option>
         <option value="고등학생">고등학생</option>
         <option value="대학생">대학생</option>
-        <option value="취준생">취준생</option>
+        <option value="취준생">취준생 (구직 중)</option>
         <option value="직장인">직장인</option>
         <option value="프리랜서">프리랜서</option>
         <option value="자영업자">자영업자</option>
+        <option value="기타">기타</option>
       </select>
     </div>
-  </div>
 
-  <div class="field full hidden" id="b_detail_wrap">
-    <label id="b_detail_label">세부 정보</label>
-    <input type="text" id="b_detail" placeholder="예: 컴퓨터공학과 3학년" maxlength="40">
-  </div>
+    <div class="field hidden" id="a_detail_wrap">
+      <label id="a_detail_label">세부 정보</label>
+      <input type="text" id="a_detail" placeholder="예: 경영학과 2학년" maxlength="40">
+    </div>
 
-  <button class="btn" onclick="go(4)">다음 →</button>
-  <button class="btn-ghost" onclick="go(2)">← 이전</button>
+    <div class="btn-wrap">
+      <button class="btn" onclick="go(5)">다음 →</button>
+      <button class="btn-ghost" onclick="go(3)">← 이전</button>
+    </div>
+  </div>
 </div>
 
-<!-- ─── Step 4: 오늘 기분 ─── -->
-<div class="card hidden" id="step4">
-  <div class="card-title">오늘의 나 🪞</div>
-  <div class="card-sub">대화가 더 나답게 흘러갈 거야</div>
+<!-- ══════════ STEP 5: 나를 한 줄로 ══════════ -->
+<div class="container hidden" id="step5">
+  <div class="card">
+    <div class="card-title">나를 한 줄로 🪞</div>
+    <div class="card-sub">조각을 골라 자동으로 완성돼요</div>
 
-  <div class="quiz-section">
-    <div class="quiz-title">① 오늘 하루를 한마디로?</div>
-    <div class="opts" data-q="q1">
-      <button class="opt-btn" data-val="A"><span class="opt-emoji">😤</span>정신없이 바빴어</button>
-      <button class="opt-btn" data-val="B"><span class="opt-emoji">😌</span>여유롭고 평온했어</button>
-      <button class="opt-btn" data-val="C"><span class="opt-emoji">😩</span>힘들고 지쳤어</button>
-      <button class="opt-btn" data-val="D"><span class="opt-emoji">😄</span>기분 좋은 일 있었어</button>
+    <!-- 문장 미리보기 -->
+    <div class="combo-preview" id="comboPreview">
+      나는&nbsp;
+      <span class="combo-chip" id="chip1">?</span>
+      <span class="combo-chip" id="chip2">?</span>
+      이고, 주로&nbsp;
+      <span class="combo-chip" id="chip3">?</span>
+      에 에너지가 충전돼.
+    </div>
+
+    <div class="section">
+      <div class="combo-group-title">① 성격 유형</div>
+      <div class="combo-opts" id="combo1_opts">
+        <span class="combo-opt" data-group="1" data-val="현실적인">현실적인</span>
+        <span class="combo-opt" data-group="1" data-val="감성적인">감성적인</span>
+        <span class="combo-opt" data-group="1" data-val="논리적인">논리적인</span>
+        <span class="combo-opt" data-group="1" data-val="엉뚱한">엉뚱한</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="combo-group-title">② 상황</div>
+      <div class="combo-opts" id="combo2_opts">
+        <span class="combo-opt" data-group="2" data-val="직장인">직장인</span>
+        <span class="combo-opt" data-group="2" data-val="학생">학생</span>
+        <span class="combo-opt" data-group="2" data-val="자유로운 사람">자유로운 사람</span>
+        <span class="combo-opt" data-group="2" data-val="부모">부모</span>
+      </div>
+    </div>
+
+    <div class="section" style="margin-bottom:0;">
+      <div class="combo-group-title">③ 에너지 충전</div>
+      <div class="combo-opts" id="combo3_opts">
+        <span class="combo-opt" data-group="3" data-val="혼자 있을 때">혼자 있을 때</span>
+        <span class="combo-opt" data-group="3" data-val="사람들과 함께할 때">사람들과 함께할 때</span>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn" onclick="go(6)">다음 →</button>
+      <button class="btn-ghost" onclick="go(4)">← 이전</button>
     </div>
   </div>
-
-  <div class="quiz-section">
-    <div class="quiz-title">② 지금 가장 하고 싶은 건?</div>
-    <div class="opts" data-q="q2">
-      <button class="opt-btn" data-val="A"><span class="opt-emoji">🍕</span>맛있는 거 먹기</button>
-      <button class="opt-btn" data-val="B"><span class="opt-emoji">🛋️</span>그냥 누워서 쉬기</button>
-      <button class="opt-btn" data-val="C"><span class="opt-emoji">🎮</span>재미있는 거 하기</button>
-      <button class="opt-btn" data-val="D"><span class="opt-emoji">💬</span>누군가랑 수다 떨기</button>
-    </div>
-  </div>
-
-  <div class="quiz-section">
-    <div class="quiz-title">③ 오늘 나를 가장 잘 표현하는 건?</div>
-    <div class="opts" data-q="q3">
-      <button class="opt-btn" data-val="A"><span class="opt-emoji">🔥</span>열정 가득</button>
-      <button class="opt-btn" data-val="B"><span class="opt-emoji">🧊</span>차분하고 냉정</button>
-      <button class="opt-btn" data-val="C"><span class="opt-emoji">🌊</span>감성 충만</button>
-      <button class="opt-btn" data-val="D"><span class="opt-emoji">💡</span>아이디어 넘침</button>
-    </div>
-  </div>
-
-  <button class="btn" onclick="startChat()">대화 시작하기 ✨</button>
-  <button class="btn-ghost" onclick="go(3)">← 이전</button>
 </div>
 
-<!-- ─── 채팅 ─── -->
+<!-- ══════════ STEP 6: 상대방 + 오늘의 나 ══════════ -->
+<div class="container hidden" id="step6">
+  <div class="card">
+    <div class="card-title">상대방 설정 🤔</div>
+    <div class="card-sub">어떤 사람과 대화할지 골라봐 (선택사항)</div>
+
+    <div class="row2">
+      <div class="field">
+        <label>연령대</label>
+        <select id="b_age">
+          <option value="">모름/비슷</option>
+          <option>10대</option>
+          <option>20대 초반</option>
+          <option>20대 후반</option>
+          <option>30대</option>
+          <option>40대 이상</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>직업/상황</label>
+        <select id="b_job" onchange="toggleDetail('b')">
+          <option value="">모름/자유</option>
+          <option value="고등학생">고등학생</option>
+          <option value="대학생">대학생</option>
+          <option value="취준생">취준생</option>
+          <option value="직장인">직장인</option>
+          <option value="프리랜서">프리랜서</option>
+          <option value="자영업자">자영업자</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field hidden" id="b_detail_wrap">
+      <label id="b_detail_label">세부 정보</label>
+      <input type="text" id="b_detail" placeholder="예: 컴퓨터공학과 3학년" maxlength="40">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">오늘의 나 🌤</div>
+    <div class="card-sub">대화가 더 나답게 흘러갈 거야</div>
+
+    <div class="section">
+      <div class="section-title">① 오늘 하루를 한마디로?</div>
+      <div class="opt-grid" data-q="q1">
+        <button class="opt-card" data-val="A"><span class="opt-emoji">😤</span><span class="opt-label">정신없이 바빴어</span></button>
+        <button class="opt-card" data-val="B"><span class="opt-emoji">😌</span><span class="opt-label">여유롭고 평온했어</span></button>
+        <button class="opt-card" data-val="C"><span class="opt-emoji">😩</span><span class="opt-label">힘들고 지쳤어</span></button>
+        <button class="opt-card" data-val="D"><span class="opt-emoji">😄</span><span class="opt-label">기분 좋은 일 있었어</span></button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">② 지금 가장 하고 싶은 건?</div>
+      <div class="opt-grid" data-q="q2">
+        <button class="opt-card" data-val="A"><span class="opt-emoji">🍕</span><span class="opt-label">맛있는 거 먹기</span></button>
+        <button class="opt-card" data-val="B"><span class="opt-emoji">🛋️</span><span class="opt-label">그냥 누워서 쉬기</span></button>
+        <button class="opt-card" data-val="C"><span class="opt-emoji">🎮</span><span class="opt-label">재미있는 거 하기</span></button>
+        <button class="opt-card" data-val="D"><span class="opt-emoji">💬</span><span class="opt-label">누군가랑 수다 떨기</span></button>
+      </div>
+    </div>
+
+    <div class="section" style="margin-bottom:0;">
+      <div class="section-title">③ 오늘 나를 가장 잘 표현하는 건?</div>
+      <div class="opt-grid" data-q="q3">
+        <button class="opt-card" data-val="A"><span class="opt-emoji">🔥</span><span class="opt-label">열정 가득</span></button>
+        <button class="opt-card" data-val="B"><span class="opt-emoji">🧊</span><span class="opt-label">차분하고 냉정</span></button>
+        <button class="opt-card" data-val="C"><span class="opt-emoji">🌊</span><span class="opt-label">감성 충만</span></button>
+        <button class="opt-card" data-val="D"><span class="opt-emoji">💡</span><span class="opt-label">아이디어 넘침</span></button>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn" onclick="startChat()">✨ 디토 대화 시작하기</button>
+      <button class="btn-ghost" onclick="go(5)">← 이전</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ 채팅 ══════════ -->
 <div class="chat-wrap hidden" id="chatWrap">
   <div class="chat-box">
     <div class="chat-header">
@@ -397,7 +553,7 @@
 </div>
 
 <script>
-/* ── MBTI 셀렉트 초기화 ── */
+/* ── MBTI 초기화 ── */
 const MBTI_LIST = ['ENFP','ENFJ','ENTP','ENTJ','INFP','INFJ','INTP','INTJ','ESFP','ESFJ','ESTP','ESTJ','ISFP','ISFJ','ISTP','ISTJ'];
 const sel1 = document.getElementById('mbti1');
 MBTI_LIST.forEach(m => {
@@ -407,7 +563,7 @@ MBTI_LIST.forEach(m => {
   sel1.appendChild(o);
 });
 
-/* ── 궁합 목록 (랜덤 자동 매칭) ── */
+/* ── 궁합 목록 ── */
 const COMPATIBILITY = {
   ENFP: ['INFJ','INTJ','ENFJ'],  ENTP: ['INFP','INTP','ENFP'],
   ENFJ: ['INFP','ISFP','ENFP'],  ENTJ: ['INTP','INTJ','INFJ'],
@@ -423,11 +579,11 @@ function pickMatch(mbti) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-/* ── 생년월일 → 나이 & 세대 스타일 ── */
+/* ── 생년월일 포맷 & 세대 ── */
 function formatBirthInput(el) {
   let v = el.value.replace(/\D/g, '');
-  if (v.length > 4)  v = v.slice(0,4) + '-' + v.slice(4);
-  if (v.length > 7)  v = v.slice(0,7) + '-' + v.slice(7);
+  if (v.length > 4) v = v.slice(0,4) + '-' + v.slice(4);
+  if (v.length > 7) v = v.slice(0,7) + '-' + v.slice(7);
   el.value = v.slice(0, 10);
 }
 function calcAgeAndGen(birthStr) {
@@ -440,33 +596,36 @@ function calcAgeAndGen(birthStr) {
   if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
   const year = birth.getFullYear();
   let genStyle = '';
-  if (year >= 2000) {
-    genStyle = '신조어와 줄임말을 자연스럽게 쓰고, 짧은 문장으로 말해. 밈이나 유행어에 반응해.';
-  } else if (year >= 1990) {
-    genStyle = '이모티콘을 적절히 쓰고, 직장 생활이나 사회생활에 공감하는 이야기를 해.';
-  } else if (year >= 1980) {
-    genStyle = '육아나 재테크 같은 소재에 공감하고, 문장형으로 자연스럽게 말해.';
-  } else {
-    genStyle = '격식과 구어체를 적절히 혼용하고, 경험담을 중심으로 이야기해.';
-  }
+  if (year >= 2000) genStyle = '신조어와 줄임말을 자연스럽게 쓰고, 짧은 문장으로 말해. 밈이나 유행어에 반응해.';
+  else if (year >= 1990) genStyle = '이모티콘을 적절히 쓰고, 직장 생활이나 사회생활에 공감하는 이야기를 해.';
+  else if (year >= 1980) genStyle = '육아나 재테크 같은 소재에 공감하고, 문장형으로 자연스럽게 말해.';
+  else genStyle = '격식과 구어체를 적절히 혼용하고, 경험담을 중심으로 이야기해.';
   return { ageStr: `${age}살`, genStyle };
 }
 
-/* ── 직업 선택 → 세부정보 토글 ── */
+/* ── 성별 선택 ── */
+let selectedGender = '';
+function selectGender(btn) {
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  selectedGender = btn.dataset.val;
+}
+
+/* ── 직업 세부 토글 ── */
 const DETAIL_LABELS = {
-  '대학생': '전공 & 학년  (예: 경영학과 2학년)',
-  '직장인': '직종 & 회사 규모  (예: IT스타트업 개발자)',
-  '고등학생': '학교 특징  (예: 예술고 2학년)',
-  '취준생': '준비 분야  (예: 공무원 시험 준비 중)',
-  '프리랜서': '주요 업무  (예: 영상편집 프리랜서)',
-  '자영업자': '업종  (예: 카페 운영)',
-  '기타': '하는 일  (자유 입력)',
+  '대학생': '전공 & 학년 (예: 경영학과 2학년)',
+  '직장인': '직종 & 회사 규모 (예: IT스타트업 개발자)',
+  '고등학생': '학교 특징 (예: 예술고 2학년)',
+  '취준생': '준비 분야 (예: 공무원 시험 준비 중)',
+  '프리랜서': '주요 업무 (예: 영상편집 프리랜서)',
+  '자영업자': '업종 (예: 카페 운영)',
+  '기타': '하는 일 (자유 입력)',
 };
 function toggleDetail(prefix) {
   const job  = document.getElementById(`${prefix}_job`).value;
   const wrap  = document.getElementById(`${prefix}_detail_wrap`);
   const label = document.getElementById(`${prefix}_detail_label`);
-  const show  = !!job && job !== '';
+  const show  = !!job;
   wrap.classList.toggle('hidden', !show);
   if (show) {
     label.textContent = DETAIL_LABELS[job] || '세부 정보';
@@ -477,59 +636,82 @@ function toggleDetail(prefix) {
   }
 }
 
-/* ── 취미 태그 토글 (다중 선택) ── */
-document.querySelectorAll('#a_hobbies_tags .tag').forEach(tag => {
-  tag.addEventListener('click', () => tag.classList.toggle('on'));
-});
-
-/* ── 성격 스타일 태그 토글 (단일 선택) ── */
-['a_convStyle_tags', 'a_emotionStyle_tags'].forEach(groupId => {
-  document.querySelectorAll(`#${groupId} .style-tag`).forEach(tag => {
+/* ── 단일 선택 태그 ── */
+['a_convStyle_tags', 'a_emotionStyle_tags', 'a_relStyle_tags'].forEach(groupId => {
+  document.querySelectorAll(`#${groupId} .tag`).forEach(tag => {
     tag.addEventListener('click', () => {
-      document.querySelectorAll(`#${groupId} .style-tag`).forEach(t => t.classList.remove('on'));
+      document.querySelectorAll(`#${groupId} .tag`).forEach(t => t.classList.remove('on'));
       tag.classList.add('on');
     });
   });
 });
 
+/* ── 다중 선택 태그 ── */
+document.querySelectorAll('#a_hobbies_tags .tag').forEach(tag => {
+  tag.addEventListener('click', () => tag.classList.toggle('on'));
+});
+
 /* ── 말투 톤 슬라이더 ── */
 function updateToneLabel(val) {
   const fun = parseInt(val);
-  const ser = 100 - fun;
-  document.getElementById('a_tone_label').textContent = `유쾌함 ${fun}% · 진지함 ${ser}%`;
+  document.getElementById('a_tone_label').textContent = `유쾌함 ${fun}% · 진지함 ${100 - fun}%`;
+}
+
+/* ── 나를 한 줄로 (Step 5) ── */
+const comboState = { 1: '', 2: '', 3: '' };
+document.querySelectorAll('.combo-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const group = opt.dataset.group;
+    document.querySelectorAll(`.combo-opt[data-group="${group}"]`).forEach(o => o.classList.remove('on'));
+    opt.classList.add('on');
+    comboState[group] = opt.dataset.val;
+    updateComboPreview();
+  });
+});
+function updateComboPreview() {
+  [['chip1', comboState[1]], ['chip2', comboState[2]], ['chip3', comboState[3]]].forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    el.textContent = val || '?';
+    el.classList.toggle('filled', !!val);
+  });
 }
 
 /* ── 퀴즈 선택 ── */
 const answers = { q1: null, q2: null, q3: null };
-document.querySelectorAll('.opts').forEach(group => {
-  group.querySelectorAll('.opt-btn').forEach(btn => {
+document.querySelectorAll('.opt-grid').forEach(group => {
+  group.querySelectorAll('.opt-card').forEach(btn => {
     btn.addEventListener('click', () => {
-      group.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
+      group.querySelectorAll('.opt-card').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
       answers[group.dataset.q] = btn.dataset.val;
     });
   });
 });
 
-/* ── 스텝 이동 ── */
-const STEP_LABELS = ['', 'MBTI 선택', '나의 프로필', '상대방 프로필', '오늘의 나'];
+/* ── 스텝 이동 & 진행 바 ── */
+const STEP_META = [
+  null,
+  { name: '기본 정보',      pct: 16.66 },
+  { name: 'MBTI 선택',      pct: 33.33 },
+  { name: '성격 스타일',    pct: 50    },
+  { name: '관심사 & 직업',  pct: 66.66 },
+  { name: '나를 한 줄로',   pct: 83.33 },
+  { name: '상대방 & 오늘',  pct: 100   },
+];
 function go(n) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 6; i++) {
     document.getElementById(`step${i}`)?.classList.toggle('hidden', i !== n);
   }
   document.getElementById('chatWrap').classList.add('hidden');
-  document.getElementById('stepper').classList.remove('hidden');
+  document.getElementById('topBar').classList.remove('hidden');
+  document.getElementById('appHeader').classList.remove('hidden');
 
-  for (let i = 1; i <= 4; i++) {
-    const dot  = document.getElementById(`sd${i}`);
-    const line = document.getElementById(`sl${i}`);
-    dot?.classList.toggle('active', i === n);
-    dot?.classList.toggle('done',   i <  n);
-    line?.classList.toggle('done',  i <  n);
-  }
-  const lbl = document.getElementById('stepLabel');
-  lbl.textContent = STEP_LABELS[n];
-  lbl.className = 's-label active';
+  const meta = STEP_META[n];
+  document.getElementById('curStep').textContent = n;
+  document.getElementById('stepName').textContent = meta.name;
+  document.getElementById('progressFill').style.width = meta.pct + '%';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ── 유틸 ── */
@@ -619,9 +801,8 @@ let currentSrc = null;
 
 function startChat() {
   M1 = document.getElementById('mbti1').value;
-  M2 = pickMatch(M1);  // 궁합 목록에서 랜덤 자동 매칭
+  M2 = pickMatch(M1);
 
-  // 나의 프로필 수집
   const a_birth  = document.getElementById('a_birth').value.trim();
   const { ageStr: a_age, genStyle: a_genStyle } = calcAgeAndGen(a_birth);
   const a_city   = document.getElementById('a_city').value;
@@ -630,24 +811,27 @@ function startChat() {
   const a_hobbies = [...document.querySelectorAll('#a_hobbies_tags .tag.on')]
                       .map(t => t.dataset.val).join(',');
 
-  // 상대방 프로필 수집
   const b_age    = document.getElementById('b_age').value;
   const b_job    = document.getElementById('b_job').value;
   const b_detail = document.getElementById('b_detail').value.trim();
 
-  // 성격 스타일 수집
-  const a_convStyle    = document.querySelector('#a_convStyle_tags .style-tag.on')?.dataset.val || '';
-  const a_emotionStyle = document.querySelector('#a_emotionStyle_tags .style-tag.on')?.dataset.val || '';
+  const a_convStyle    = document.querySelector('#a_convStyle_tags .tag.on')?.dataset.val || '';
+  const a_emotionStyle = document.querySelector('#a_emotionStyle_tags .tag.on')?.dataset.val || '';
+  const a_relStyle     = document.querySelector('#a_relStyle_tags .tag.on')?.dataset.val || '';
   const toneVal = document.getElementById('a_tone_slider').value;
-  const a_tone = `유쾌함 ${toneVal}%, 진지함 ${100 - toneVal}%`;
+  const a_tone  = `유쾌함 ${toneVal}%, 진지함 ${100 - toneVal}%`;
 
-  // 발신자 이름 레이블
+  const comboSentence = (comboState[1] && comboState[2] && comboState[3])
+    ? `나는 ${comboState[1]} ${comboState[2]}이고, 주로 ${comboState[3]}에 에너지가 충전돼.`
+    : '';
+
   M1name = [a_age, a_city, a_job].filter(Boolean).join(' · ') || M1;
   M2name = [b_age, b_job].filter(Boolean).join(' · ') || M2;
 
   // UI 전환
-  document.getElementById('step4').classList.add('hidden');
-  document.getElementById('stepper').classList.add('hidden');
+  for (let i = 1; i <= 6; i++) document.getElementById(`step${i}`)?.classList.add('hidden');
+  document.getElementById('topBar').classList.add('hidden');
+  document.getElementById('appHeader').classList.add('hidden');
   document.getElementById('chatWrap').classList.remove('hidden');
   document.getElementById('label1').textContent = M1;
   document.getElementById('label2').textContent = M2;
@@ -659,18 +843,21 @@ function startChat() {
 
   // SSE 파라미터 구성
   const p = new URLSearchParams({ mbti1: M1, mbti2: M2 });
-  if (a_age)     p.set('a_age', a_age);
-  if (a_city)    p.set('a_city', a_city);
-  if (a_job)     p.set('a_job', a_job);
-  if (a_detail)  p.set('a_detail', a_detail);
+  if (a_age)          p.set('a_age', a_age);
+  if (a_city)         p.set('a_city', a_city);
+  if (a_job)          p.set('a_job', a_job);
+  if (a_detail)       p.set('a_detail', a_detail);
   if (a_hobbies)      p.set('a_hobbies', a_hobbies);
   if (a_convStyle)    p.set('a_convStyle', a_convStyle);
   if (a_emotionStyle) p.set('a_emotionStyle', a_emotionStyle);
-  p.set('a_tone', a_tone);
+  if (a_relStyle)     p.set('a_relStyle', a_relStyle);
   if (a_genStyle)     p.set('a_genStyle', a_genStyle);
-  if (b_age)     p.set('b_age', b_age);
-  if (b_job)     p.set('b_job', b_job);
-  if (b_detail)  p.set('b_detail', b_detail);
+  if (comboSentence)  p.set('a_combo', comboSentence);
+  if (selectedGender) p.set('a_gender', selectedGender);
+  p.set('a_tone', a_tone);
+  if (b_age)    p.set('b_age', b_age);
+  if (b_job)    p.set('b_job', b_job);
+  if (b_detail) p.set('b_detail', b_detail);
   if (answers.q1) p.set('q1', answers.q1);
   if (answers.q2) p.set('q2', answers.q2);
   if (answers.q3) p.set('q3', answers.q3);
@@ -681,7 +868,6 @@ function startChat() {
 
   src.onmessage = (e) => {
     const data = JSON.parse(e.data);
-
     if (data.done) {
       isDone = true;
       if (!busy && queue.length === 0) {
@@ -708,12 +894,13 @@ function startChat() {
   src.onerror = () => { removeTypingDots(); src.close(); };
 }
 
-/* ── 완료 후 title 업데이트 ── */
+/* ── 완료 체크 ── */
 setInterval(() => {
   if (isDone && !busy && queue.length === 0) {
     removeTypingDots();
     const t = document.getElementById('chatTitle');
-    if (t && t.textContent.includes('실시간 대화 중...')) t.textContent = `${M1} × ${M2} 대화 완료 ✅`;
+    if (t && t.textContent.includes('실시간 대화 중...'))
+      t.textContent = `${M1} × ${M2} 대화 완료 ✅`;
   }
 }, 300);
 
