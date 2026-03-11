@@ -1,89 +1,57 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-02-24T14:21:29.808Z",
+  "lastUpdated": "2026-02-28T00:00:00.000Z",
   "activeFeatures": [
-    "DittoChat"
+    "DittoChat-Onboarding-v1.1"
   ],
-  "primaryFeature": "DittoChat",
+  "primaryFeature": "DittoChat-Onboarding-v1.1",
   "features": {
-    "DittoChat": {
-      "phase": "do",
-      "phaseNumber": 3,
+    "DittoChat-Onboarding-v1.1": {
+      "phase": "plan",
+      "phaseNumber": 1,
       "matchRate": null,
       "iterationCount": 0,
-      "requirements": [],
-      "documents": {},
-      "timestamps": {
-        "started": "2026-02-24T13:31:50.304Z",
-        "lastUpdated": "2026-02-24T14:21:29.808Z"
+      "requirements": [
+        "6단계 온보딩 전면 재설계",
+        "기존 Step3 상대방 프로필 제거",
+        "직업 카드형 UI",
+        "취미 최대 3개 선택 제한",
+        "카카오톡 txt 업로드 (선택사항)",
+        "아바타 이름 + 프로필 이미지 선택"
+      ],
+      "documents": {
+        "plan": "docs/pdca-plan-onboarding-v1.1.md"
       },
-      "lastFile": "/Volumes/AI DRIVE/Projects/DittoChat/server.js"
+      "timestamps": {
+        "started": "2026-02-28T00:00:00.000Z",
+        "lastUpdated": "2026-02-28T00:00:00.000Z"
+      },
+      "lastFile": "/home/user/DittoChat/index.html"
     }
   },
   "pipeline": {
     "currentPhase": 1,
     "level": "Dynamic",
-    "phaseHistory": []
+    "phaseHistory": [
+      {
+        "phase": "do",
+        "feature": "DittoChat",
+        "completedAt": "2026-02-28T00:00:00.000Z",
+        "note": "v1.0 PoC 완료 → v1.1 Plan 단계 진입"
+      }
+    ]
   },
   "session": {
-    "startedAt": "2026-02-24T13:27:30.509Z",
+    "startedAt": "2026-02-28T00:00:00.000Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-02-24T14:21:29.808Z"
+    "lastActivity": "2026-02-28T00:00:00.000Z"
   },
   "history": [
     {
-      "timestamp": "2026-02-24T13:31:50.304Z",
-      "feature": "DittoChat",
-      "phase": "do",
-      "action": "updated"
-    },
-    {
-      "timestamp": "2026-02-24T13:42:05.409Z",
-      "feature": "DittoChat",
-      "phase": "do",
-      "action": "updated"
-    },
-    {
-      "timestamp": "2026-02-24T13:42:24.423Z",
-      "feature": "DittoChat",
-      "phase": "do",
-      "action": "updated"
-    },
-    {
-      "timestamp": "2026-02-24T13:50:56.860Z",
-      "feature": "DittoChat",
-      "phase": "do",
-      "action": "updated"
-    },
-    {
-      "timestamp": "2026-02-24T13:51:34.129Z",
-      "feature": "DittoChat",
-      "phase": "do",
-      "action": "updated"
-    },
-    {
-      "timestamp": "2026-02-24T13:56:34.379Z",
-      "feature": "DittoChat",
-      "phase": "do",
-      "action": "updated"
-    },
-    {
-      "timestamp": "2026-02-24T13:57:30.979Z",
-      "feature": "DittoChat",
-      "phase": "do",
-      "action": "updated"
-    },
-    {
-      "timestamp": "2026-02-24T14:07:05.595Z",
-      "feature": "DittoChat",
-      "phase": "do",
-      "action": "updated"
-    },
-    {
-      "timestamp": "2026-02-24T14:21:29.808Z",
-      "feature": "DittoChat",
-      "phase": "do",
-      "action": "updated"
+      "timestamp": "2026-02-28T00:00:00.000Z",
+      "feature": "DittoChat-Onboarding-v1.1",
+      "phase": "plan",
+      "action": "started"
     }
   ]
 }
